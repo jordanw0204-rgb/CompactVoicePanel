@@ -218,7 +218,7 @@
 
 .vc-compact-voice-panel-popout {
     box-sizing: border-box;
-    width: 286px;
+    width: min(360px, calc(100vw - 24px));
     padding: 12px;
     border: 1px solid color-mix(in srgb, var(--background-modifier-accent) 82%, transparent);
     border-radius: 8px;
@@ -254,22 +254,28 @@
     width: 30px;
     min-width: 30px;
     height: 30px;
-    color: var(--interactive-normal);
+    color: var(--white-500, #fff);
     background: color-mix(in srgb, var(--background-secondary-alt) 76%, transparent);
 }
 
 .vc-compact-voice-panel-screenshare:hover,
 .vc-compact-voice-panel-screenshare:focus-visible {
-    color: var(--interactive-active);
+    color: var(--white-500, #fff);
     background: color-mix(in srgb, var(--background-modifier-hover) 84%, transparent);
+}
+
+.vc-compact-voice-panel-screenshare svg,
+.vc-compact-voice-panel-screenshare path {
+    color: currentColor;
+    fill: currentColor;
 }
 
 .vc-compact-voice-panel-members {
     margin-top: 10px;
     box-sizing: border-box;
     width: 100%;
-    min-height: 72px;
-    padding: 8px 8px 9px;
+    min-height: 52px;
+    padding: 8px;
     border: 1px solid color-mix(in srgb, var(--background-modifier-accent) 72%, transparent);
     border-radius: 12px;
     background: color-mix(in srgb, var(--background-secondary-alt) 82%, transparent);
@@ -278,8 +284,8 @@
 
 .vc-compact-voice-panel-member-grid {
     display: flex;
-    align-items: flex-start;
-    gap: 8px;
+    align-items: center;
+    gap: 5px;
     overflow-x: auto;
     overflow-y: hidden;
     padding-bottom: 1px;
@@ -293,15 +299,13 @@
 .vc-compact-voice-panel-member {
     position: relative;
     display: flex;
-    flex: 0 0 54px;
+    flex: 0 0 36px;
     align-items: center;
-    justify-content: flex-start;
-    flex-direction: column;
-    gap: 5px;
-    width: 54px;
+    justify-content: center;
+    width: 36px;
     min-width: 0;
-    height: 58px;
-    padding: 5px 4px 4px;
+    height: 36px;
+    padding: 2px;
     border: 0;
     border-radius: 8px;
     color: var(--text-normal);
@@ -348,51 +352,63 @@
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--background-floating) 94%, transparent);
 }
 
-.vc-compact-voice-panel-member-label {
-    position: relative;
-    z-index: 1;
-    display: block;
-    width: 100%;
-    min-width: 0;
-    height: 14px;
+.vc-compact-voice-panel-member.vc-compact-voice-panel-speaking .vc-compact-voice-panel-member-avatar {
+    box-shadow:
+        0 0 0 2px var(--status-positive),
+        0 0 0 4px color-mix(in srgb, var(--status-positive) 24%, transparent);
 }
 
-.vc-compact-voice-panel-member-name,
-.vc-compact-voice-panel-member-username {
-    position: absolute;
-    inset: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    transition: opacity 120ms ease, transform 120ms ease;
-    white-space: nowrap;
-}
-
-.vc-compact-voice-panel-member-name {
-    color: var(--header-primary);
+.vc-compact-voice-panel-member-overflow {
+    display: grid;
+    place-items: center;
+    flex: 0 0 36px;
+    width: 36px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    color: var(--text-normal);
+    background: color-mix(in srgb, var(--background-floating) 88%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--background-modifier-accent) 80%, transparent);
+    cursor: pointer;
     font-size: 11px;
-    font-weight: 700;
-    line-height: 14px;
+    font-weight: 800;
 }
 
-.vc-compact-voice-panel-member-username {
+.vc-compact-voice-panel-member-overflow:hover,
+.vc-compact-voice-panel-member-overflow:focus-visible {
+    color: var(--white-500, #fff);
+    background: color-mix(in srgb, var(--background-modifier-hover) 88%, transparent);
+    outline: none;
+}
+
+.vc-compact-voice-panel-member-tooltip {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    text-align: left;
+}
+
+.vc-compact-voice-panel-member-tooltip-name {
+    color: var(--header-primary);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 16px;
+}
+
+.vc-compact-voice-panel-member-tooltip-username {
     color: var(--text-muted);
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 500;
     line-height: 14px;
-    opacity: 0;
-    transform: translateY(2px);
 }
 
-.vc-compact-voice-panel-member:hover .vc-compact-voice-panel-member-name,
-.vc-compact-voice-panel-member:focus-visible .vc-compact-voice-panel-member-name {
-    opacity: 0;
-    transform: translateY(-2px);
-}
-
-.vc-compact-voice-panel-member:hover .vc-compact-voice-panel-member-username,
-.vc-compact-voice-panel-member:focus-visible .vc-compact-voice-panel-member-username {
-    opacity: 1;
-    transform: translateY(0);
+.vc-compact-voice-panel-member-tooltip-live {
+    color: var(--status-danger);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 12px;
+    text-transform: uppercase;
 }
 
 .vc-compact-voice-panel-live-badge {

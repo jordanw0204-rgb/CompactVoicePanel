@@ -13,11 +13,14 @@ import managedStyle from "./style.css?managed";
 const cl = classNameFactory("vc-compact-voice-panel-");
 const { selectVoiceChannel } = findByPropsLazy("selectVoiceChannel", "selectChannel");
 const MediaEngineActions = findByPropsLazy("setLocalVolume", "setLocalMute");
+const SpeakingStore = findByPropsLazy("isSpeaking");
+const PAGE_SIZE = 8;
 
 type VoiceUser = {
     user: any;
     voiceState?: any;
     isStreaming: boolean;
+    isSpeaking: boolean;
 };
 
 function VoiceIcon() {
@@ -55,23 +58,31 @@ function DisconnectButton() {
 }
 
 function clickDiscordScreenShareButton() {
-    const panels = document.querySelector<HTMLElement>("[class*='panels']");
-    const buttons = panels?.querySelectorAll<HTMLElement>("button,[role='button']");
-    if (!buttons) return false;
+    const controls = document.querySelectorAll<HTMLElement>("button,[role='button']");
 
-    for (const button of buttons) {
-        if (button.closest(`.${cl("popout")}`)) continue;
+    for (const control of controls) {
+        if (control.closest(`.${cl("popout")}`)) continue;
 
         const label = [
-            button.getAttribute("aria-label"),
-            button.getAttribute("title"),
-            button.textContent
+            control.getAttribute("aria-label"),
+            control.getAttribute("title"),
+            control.textContent,
+            control.className
         ].filter(Boolean).join(" ");
 
         if (/\b(screen|screenshare|screen share|go live|share your screen)\b/i.test(label)) {
-            button.click();
+            control.click();
             return true;
         }
+    }
+
+    const nativeScreenShareIcon = [...document.querySelectorAll<SVGElement>("svg")]
+        .find(svg => !svg.closest(`.${cl("popout")}`) && svg.querySelector("path[d*='13.2 14.3375']"));
+    const clickableParent = nativeScreenShareIcon?.closest<HTMLElement>("button,[role='button']");
+
+    if (clickableParent) {
+        clickableParent.click();
+        return true;
     }
 
     return false;
@@ -90,9 +101,8 @@ function ScreenShareButton({ voiceChannelId }: { voiceChannelId: string; }) {
                         event.preventDefault();
                         event.stopPropagation();
 
-                        if (!clickDiscordScreenShareButton()) {
-                            ChannelRouter.transitionToChannel(voiceChannelId);
-                        }
+                        ChannelRouter.transitionToChannel(voiceChannelId);
+                        window.setTimeout(clickDiscordScreenShareButton, 50);
                     }}
                 >
                     <ScreenshareIcon width={18} height={18} />
@@ -110,6 +120,21 @@ function getAvatarUrl(user: any, size = 48) {
 
 function isUserStreaming(userId: string, voiceState?: any) {
     return Boolean(voiceState?.selfStream || voiceState?.stream || ApplicationStreamingStore.getAnyStreamForUser(userId));
+}
+
+function isUserSpeaking(userId: string) {
+    const mediaEngine = MediaEngineStore.getMediaEngine?.() as any;
+
+    try {
+        return Boolean(
+            SpeakingStore.isSpeaking?.(userId)
+            ?? (MediaEngineStore as any).isSpeaking?.(userId)
+            ?? mediaEngine?.isSpeaking?.(userId)
+            ?? mediaEngine?.getSpeakingFlags?.(userId)
+        );
+    } catch {
+        return false;
+    }
 }
 
 function getVoiceChannelName(channel: ReturnType<typeof ChannelStore.getChannel> | undefined) {
@@ -188,9 +213,16 @@ function VoiceMemberButton({ voiceUser, compact = false, onVolumeMenuOpen, onVol
     onVolumeMenuOpen(): void;
     onVolumeMenuClose(): void;
 }) {
-    const { user, isStreaming } = voiceUser;
+    const { user, isStreaming, isSpeaking } = voiceUser;
     const name = user.globalName ?? user.displayName ?? user.username;
     const username = user.username ? `@${user.username}` : "";
+    const tooltipText = (
+        <span className={cl("member-tooltip")}>
+            <span className={cl("member-tooltip-name")}>{name}</span>
+            <span className={cl("member-tooltip-username")}>{username}</span>
+            {isStreaming && <span className={cl("member-tooltip-live")}>Streaming</span>}
+        </span>
+    );
 
     function openVolumeMenu(event: React.MouseEvent<HTMLElement>) {
         event.preventDefault();
@@ -206,22 +238,16 @@ function VoiceMemberButton({ voiceUser, compact = false, onVolumeMenuOpen, onVol
     }
 
     return (
-        <Tooltip text={isStreaming ? `${name} is streaming` : name}>
+        <Tooltip text={tooltipText}>
             {tooltipProps => (
                 <button
                     {...tooltipProps}
                     type="button"
-                    className={cl("member", { compact })}
+                    className={cl("member", { compact, speaking: isSpeaking })}
                     aria-label={`${name}. Right click to adjust volume.`}
                     onClick={openProfile}
                     onContextMenu={openVolumeMenu}
                 >
-                    {!compact && (
-                        <span className={cl("member-label")}>
-                            <span className={cl("member-name")}>{name}</span>
-                            <span className={cl("member-username")}>{username}</span>
-                        </span>
-                    )}
                     <span className={cl("member-avatar-wrap")}>
                         <img
                             className={cl("member-avatar")}
@@ -269,6 +295,8 @@ function VoiceMemberList({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
     onVolumeMenuOpen(): void;
     onVolumeMenuClose(): void;
 }) {
+    const [page, setPage] = useState(0);
+
     if (!voiceUsers.length) {
         return (
             <Text variant="text-xs/normal" className={cl("empty")}>
@@ -277,9 +305,15 @@ function VoiceMemberList({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
         );
     }
 
+    const pageCount = Math.max(1, Math.ceil(voiceUsers.length / PAGE_SIZE));
+    const currentPage = page % pageCount;
+    const start = currentPage * PAGE_SIZE;
+    const visibleUsers = voiceUsers.slice(start, start + PAGE_SIZE);
+    const hiddenCount = voiceUsers.length - visibleUsers.length;
+
     return (
         <div className={cl("member-grid")}>
-            {voiceUsers.map(voiceUser => (
+            {visibleUsers.map(voiceUser => (
                 <VoiceMemberButton
                     key={voiceUser.user.id}
                     voiceUser={voiceUser}
@@ -287,6 +321,20 @@ function VoiceMemberList({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
                     onVolumeMenuClose={onVolumeMenuClose}
                 />
             ))}
+            {hiddenCount > 0 && (
+                <button
+                    type="button"
+                    className={cl("member-overflow")}
+                    aria-label={`Show ${hiddenCount} more voice users`}
+                    onClick={event => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setPage(currentPage + 1);
+                    }}
+                >
+                    +{hiddenCount}
+                </button>
+            )}
         </div>
     );
 }
@@ -338,7 +386,7 @@ function CompactVoicePanel() {
     );
 
     const voiceStateKey = useStateFromStores(
-        [VoiceStateStore],
+        [VoiceStateStore, MediaEngineStore],
         () => {
             if (!voiceChannelId) return "";
 
@@ -347,7 +395,8 @@ function CompactVoicePanel() {
                 .map((voiceState: any) => [
                     voiceState.userId,
                     voiceState.selfStream ? "1" : "0",
-                    voiceState.stream ? "1" : "0"
+                    voiceState.stream ? "1" : "0",
+                    isUserSpeaking(voiceState.userId) ? "1" : "0"
                 ].join(":"))
                 .sort()
                 .join("|");
@@ -373,7 +422,8 @@ function CompactVoicePanel() {
                     userMap.set(user.id, {
                         user,
                         voiceState,
-                        isStreaming: isUserStreaming(user.id, voiceState)
+                        isStreaming: isUserStreaming(user.id, voiceState),
+                        isSpeaking: isUserSpeaking(user.id)
                     });
                 }
             }
@@ -383,7 +433,8 @@ function CompactVoicePanel() {
                 userMap.set(user.id, {
                     user,
                     voiceState,
-                    isStreaming: isUserStreaming(user.id, voiceState)
+                    isStreaming: isUserStreaming(user.id, voiceState),
+                    isSpeaking: isUserSpeaking(user.id)
                 });
             }
 
