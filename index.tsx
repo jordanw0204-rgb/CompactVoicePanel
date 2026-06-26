@@ -6,7 +6,7 @@ import { openUserProfile } from "@utils/discord";
 import { pluralise } from "@utils/misc";
 import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { ApplicationStreamingStore, ChannelRouter, ChannelStore, ContextMenuApi, MediaEngineStore, Menu, Popout, Text, Tooltip, UserStore, useMemo, useRef, useState, useStateFromStores, VoiceStateStore, SelectedChannelStore } from "@webpack/common";
+import { ApplicationStreamingStore, ChannelRouter, ChannelStore, ContextMenuApi, MediaEngineStore, Menu, Popout, Text, Tooltip, UserStore, useEffect, useMemo, useRef, useState, useStateFromStores, VoiceStateStore, SelectedChannelStore } from "@webpack/common";
 
 import managedStyle from "./style.css?managed";
 
@@ -270,6 +270,7 @@ function VoiceAvatarStrip({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
 
     const visibleUsers = voiceUsers.slice(0, 3);
     const hiddenCount = voiceUsers.length - visibleUsers.length;
+    const overflowUser = hiddenCount > 0 ? voiceUsers[visibleUsers.length] : undefined;
 
     return (
         <div className={cl("avatars")} onClick={event => event.stopPropagation()}>
@@ -283,7 +284,16 @@ function VoiceAvatarStrip({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
                         onVolumeMenuClose={onVolumeMenuClose}
                     />
                 ))}
-                {hiddenCount > 0 && <span className={cl("overflow-count")}>+{hiddenCount}</span>}
+                {overflowUser && (
+                    <span className={cl("overflow-avatar")} aria-label={`${hiddenCount} more voice users`}>
+                        <img
+                            className={cl("overflow-avatar-image")}
+                            src={getAvatarUrl(overflowUser.user, 24)}
+                            alt=""
+                        />
+                        <span className={cl("overflow-count")}>+{hiddenCount}</span>
+                    </span>
+                )}
             </div>
         </div>
     );
@@ -373,6 +383,7 @@ function CompactVoicePanel() {
     const lastSpokeAtRef = useRef(new Map<string, number>());
     const speakingRef = useRef(new Map<string, boolean>());
     const [showPopout, setShowPopout] = useState(false);
+    const [speakingKey, setSpeakingKey] = useState("");
 
     const voiceChannelId = useStateFromStores(
         [SelectedChannelStore],
@@ -406,6 +417,34 @@ function CompactVoicePanel() {
 
     const channel = voiceChannelId ? ChannelStore.getChannel(voiceChannelId) : undefined;
     const voiceStates = voiceChannelId ? VoiceStateStore.getVoiceStatesForChannel(voiceChannelId) ?? {} : {};
+
+    useEffect(() => {
+        if (!voiceChannelId) return;
+        const channelId = voiceChannelId;
+
+        function readSpeakingKey() {
+            const states = VoiceStateStore.getVoiceStatesForChannel(channelId) ?? {};
+            return Object.values(states)
+                .filter((voiceState: any) => isUserSpeaking(voiceState.userId))
+                .map((voiceState: any) => voiceState.userId)
+                .sort()
+                .join("|");
+        }
+
+        let previousKey = readSpeakingKey();
+        setSpeakingKey(previousKey);
+
+        const intervalId = window.setInterval(() => {
+            const nextKey = readSpeakingKey();
+            if (nextKey === previousKey) return;
+
+            previousKey = nextKey;
+            setSpeakingKey(nextKey);
+        }, 50);
+
+        return () => window.clearInterval(intervalId);
+    }, [voiceChannelId]);
+
     const voiceUsers = useMemo(
         () => {
             const userMap = new Map<string, VoiceUser>();
@@ -457,7 +496,7 @@ function CompactVoicePanel() {
                 return firstName.localeCompare(secondName);
             });
         },
-        [activeStreamKey, channel, voiceStateKey, voiceChannelId]
+        [activeStreamKey, channel, speakingKey, voiceStateKey, voiceChannelId]
     );
 
     if (!voiceChannelId) return null;

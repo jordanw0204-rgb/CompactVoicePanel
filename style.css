@@ -4,9 +4,9 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    width: 156px;
-    min-width: 156px;
-    max-width: 156px;
+    width: 176px;
+    min-width: 176px;
+    max-width: 176px;
     height: 38px;
     padding: 4px 6px 4px 7px;
     border-radius: 8px;
@@ -35,7 +35,7 @@
 
 .vc-compact-voice-panel-text {
     display: flex;
-    flex: 1 1 40px;
+    flex: 1 1 58px;
     min-width: 0;
     flex-direction: column;
     gap: 1px;
@@ -203,17 +203,39 @@
 .vc-compact-voice-panel-overflow-count {
     display: grid;
     place-items: center;
-    min-width: 19px;
-    height: 19px;
-    margin-left: -4px;
+    position: absolute;
+    inset: 0;
+    min-width: 0;
+    height: 20px;
+    margin-left: 0;
     padding: 0 5px;
     border-radius: 999px;
-    color: var(--text-normal);
-    background: var(--background-secondary-alt);
+    color: var(--white-500, #fff);
+    background: color-mix(in srgb, var(--background-floating) 62%, transparent);
     font-size: 10px;
     font-weight: 800;
-    line-height: 19px;
+    line-height: 20px;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--white-500) 12%, transparent);
+}
+
+.vc-compact-voice-panel-overflow-avatar {
+    position: relative;
+    display: block;
+    width: 20px;
+    min-width: 20px;
+    height: 20px;
+    margin-left: -6px;
+    border-radius: 999px;
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--background-floating) 80%, transparent);
+}
+
+.vc-compact-voice-panel-overflow-avatar-image {
+    display: block;
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    object-fit: cover;
+    filter: brightness(0.74);
 }
 
 .vc-compact-voice-panel-popout {
