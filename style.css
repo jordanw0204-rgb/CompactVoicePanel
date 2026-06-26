@@ -93,6 +93,10 @@
     gap: 1px;
 }
 
+.vc-compact-voice-panel-tile.vc-compact-voice-panel-expanded .vc-compact-voice-panel-text {
+    flex: 0 1 82px;
+}
+
 .vc-compact-voice-panel-status {
     overflow: hidden;
     color: var(--text-muted);
@@ -193,6 +197,11 @@
     background: color-mix(in srgb, var(--background-secondary-alt) 74%, transparent);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--white-500) 5%, transparent);
     backdrop-filter: blur(10px);
+}
+
+.vc-compact-voice-panel-tile.vc-compact-voice-panel-expanded .vc-compact-voice-panel-avatars {
+    min-width: 132px;
+    justify-content: flex-start;
 }
 
 .vc-compact-voice-panel-tile:hover .vc-compact-voice-panel-avatars,

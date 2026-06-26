@@ -2,11 +2,11 @@ import ErrorBoundary from "@components/ErrorBoundary";
 import { ScreenshareIcon } from "@components/Icons";
 import { debounce } from "@shared/debounce";
 import { classNameFactory } from "@utils/css";
-import { openPrivateChannel, openUserProfile } from "@utils/discord";
+import { openUserProfile } from "@utils/discord";
 import { pluralise } from "@utils/misc";
 import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { ApplicationStreamingStore, ChannelRouter, ChannelStore, ContextMenuApi, FluxDispatcher, MediaEngineStore, Menu, Popout, SoundboardStore, Text, Tooltip, UserStore, useEffect, useMemo, useRef, useState, useStateFromStores, VoiceStateStore, SelectedChannelStore } from "@webpack/common";
+import { ApplicationStreamingStore, ChannelActionCreators, ChannelRouter, ChannelStore, ContextMenuApi, FluxDispatcher, MediaEngineStore, Menu, Popout, SoundboardStore, Text, Tooltip, UserStore, useEffect, useMemo, useRef, useState, useStateFromStores, VoiceStateStore, SelectedChannelStore } from "@webpack/common";
 
 import managedStyle from "./style.css?managed";
 
@@ -224,6 +224,30 @@ function toggleSoundboardMute(userId: string) {
     FluxDispatcher.dispatch({ type: "AUDIO_TOGGLE_LOCAL_SOUNDBOARD_MUTE", userId });
 }
 
+function openDirectMessage(userId: string) {
+    const currentUserId = UserStore.getCurrentUser()?.id;
+    if (!currentUserId || userId === currentUserId) return;
+
+    const existingChannelId = ChannelStore.getDMFromUserId(userId);
+    if (existingChannelId) {
+        ChannelRouter.transitionToChannel(existingChannelId);
+        return;
+    }
+
+    ChannelActionCreators.openPrivateChannel(currentUserId, userId);
+
+    let attempts = 0;
+    const intervalId = window.setInterval(() => {
+        const channelId = ChannelStore.getDMFromUserId(userId);
+        attempts++;
+
+        if (!channelId && attempts < 10) return;
+
+        window.clearInterval(intervalId);
+        if (channelId) ChannelRouter.transitionToChannel(channelId);
+    }, 100);
+}
+
 const setLocalVolume = debounce((userId: string, volume: number) => {
     const roundedVolume = Math.round(volume);
     const mediaEngine = MediaEngineStore.getMediaEngine?.() as any;
@@ -271,7 +295,7 @@ function VoiceUserContextMenu({ user, onClose }: { user: any; onClose(): void; }
                 <Menu.MenuItem
                     id="vc-compact-voice-panel-user-message"
                     label="Message"
-                    action={() => openPrivateChannel(user.id)}
+                    action={() => openDirectMessage(user.id)}
                 />
             </Menu.MenuGroup>
             <Menu.MenuSeparator />
@@ -358,14 +382,15 @@ function VoiceMemberButton({ voiceUser, compact = false, onVolumeMenuOpen, onVol
     );
 }
 
-function VoiceAvatarStrip({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
+function VoiceAvatarStrip({ voiceUsers, expanded, onVolumeMenuOpen, onVolumeMenuClose }: {
     voiceUsers: VoiceUser[];
+    expanded: boolean;
     onVolumeMenuOpen(): void;
     onVolumeMenuClose(): void;
 }) {
     if (!voiceUsers.length) return null;
 
-    const visibleUsers = voiceUsers.slice(0, 3);
+    const visibleUsers = voiceUsers.slice(0, expanded ? 8 : 3);
     const hiddenCount = voiceUsers.length - visibleUsers.length;
     const overflowUser = hiddenCount > 0 ? voiceUsers[visibleUsers.length] : undefined;
 
@@ -687,6 +712,7 @@ function CompactVoicePanel() {
                     </div>
                     <VoiceAvatarStrip
                         voiceUsers={voiceUsers}
+                        expanded={expanded}
                         onVolumeMenuOpen={keepOpenForVolumeMenu}
                         onVolumeMenuClose={releaseVolumeMenu}
                     />
