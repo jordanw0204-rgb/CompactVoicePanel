@@ -13,26 +13,13 @@ It is designed for people who want the voice area to take less room while still 
 - Opens a hover popout with connected voice users.
 - Lets you click the tile to jump back to the connected voice channel.
 - Shows a disconnect button when hovering the tile.
-- Moves the companion fake mute/deafen control into the native account-control row.
 
-## Important Dependency
+## Dependencies
 
-This plugin currently depends on a companion userplugin named `fakeVoiceOption`.
+This plugin is standalone. It does not require any private companion plugins.
 
-The source imports:
+It only installs the compact voice UI. Fake mute/deafen controls are not included in this public plugin.
 
-```ts
-../fakeVoiceOption/settings
-```
-
-That means your Vencord source tree must contain both folders:
-
-```text
-src/userplugins/CompactVoicePanel
-src/userplugins/fakeVoiceOption
-```
-
-If `fakeVoiceOption` is missing, Vencord will not build this plugin as-is.
 
 ## Installing Vencord From Source
 
@@ -74,12 +61,6 @@ cd src/userplugins
 git clone https://github.com/jordanw0204-rgb/CompactVoicePanel
 ```
 
-Also make sure the required `fakeVoiceOption` userplugin exists at:
-
-```text
-src/userplugins/fakeVoiceOption
-```
-
 Then build and inject Vencord:
 
 ```sh
@@ -96,8 +77,7 @@ After injection finishes, fully restart Discord.
 2. Go to `User Settings`.
 3. Open the `Vencord` plugin settings.
 4. Enable `CompactVoicePanel`.
-5. Make sure `Fake Voice Options` is also enabled.
-6. Join a voice channel or call to see the compact tile.
+5. Join a voice channel or call to see the compact tile.
 
 ## Updating
 
@@ -121,7 +101,7 @@ Restart Discord afterward.
 ## Troubleshooting
 
 - If the plugin does not appear, confirm the folder is exactly `src/userplugins/CompactVoicePanel`.
-- If Vencord fails to build, confirm the companion `fakeVoiceOption` folder is installed.
+- If Vencord fails to build, confirm your Vencord source dependencies are installed with `pnpm install --frozen-lockfile`.
 - If Discord still shows the large voice panel, restart Discord after injecting.
 - If the bottom-left controls look cramped, another account-panel plugin or custom theme may be taking extra space.
 
