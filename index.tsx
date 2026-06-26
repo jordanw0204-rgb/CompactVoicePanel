@@ -294,6 +294,21 @@ function VoiceMemberList({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
     onVolumeMenuOpen(): void;
     onVolumeMenuClose(): void;
 }) {
+    function handleWheel(event: React.WheelEvent<HTMLDivElement>) {
+        const element = event.currentTarget;
+        if (element.scrollWidth <= element.clientWidth) return;
+
+        const delta = Math.abs(event.deltaY) >= Math.abs(event.deltaX)
+            ? event.deltaY
+            : event.deltaX;
+
+        if (!delta) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+        element.scrollLeft += delta;
+    }
+
     if (!voiceUsers.length) {
         return (
             <Text variant="text-xs/normal" className={cl("empty")}>
@@ -303,7 +318,7 @@ function VoiceMemberList({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
     }
 
     return (
-        <div className={cl("member-grid")}>
+        <div className={cl("member-grid")} onWheel={handleWheel}>
             {voiceUsers.map(voiceUser => (
                 <VoiceMemberButton
                     key={voiceUser.user.id}
@@ -356,6 +371,7 @@ function CompactVoicePanel() {
     const hoveringRef = useRef(false);
     const volumeMenuOpenRef = useRef(false);
     const lastSpokeAtRef = useRef(new Map<string, number>());
+    const speakingRef = useRef(new Map<string, boolean>());
     const [showPopout, setShowPopout] = useState(false);
 
     const voiceChannelId = useStateFromStores(
@@ -420,9 +436,13 @@ function CompactVoicePanel() {
             const now = Date.now();
 
             for (const voiceUser of users) {
-                if (voiceUser.isSpeaking) {
+                const wasSpeaking = speakingRef.current.get(voiceUser.user.id) ?? false;
+
+                if (voiceUser.isSpeaking && !wasSpeaking) {
                     lastSpokeAtRef.current.set(voiceUser.user.id, now);
                 }
+
+                speakingRef.current.set(voiceUser.user.id, voiceUser.isSpeaking);
             }
 
             return users.sort((first, second) => {
