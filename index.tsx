@@ -1,6 +1,7 @@
 import ErrorBoundary from "@components/ErrorBoundary";
 import { debounce } from "@shared/debounce";
 import { classNameFactory } from "@utils/css";
+import { openUserProfile } from "@utils/discord";
 import { pluralise } from "@utils/misc";
 import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
@@ -80,26 +81,41 @@ function getPrivateCallUsers(channel: ReturnType<typeof ChannelStore.getChannel>
         .filter(Boolean);
 }
 
+function getLocalVolume(userId: string) {
+    const mediaEngine = MediaEngineStore.getMediaEngine?.() as any;
+
+    return mediaEngine?.getLocalVolume?.(userId)
+        ?? MediaEngineStore.getLocalVolume(userId)
+        ?? 100;
+}
+
 const setLocalVolume = debounce((userId: string, volume: number) => {
-    MediaEngineActions.setLocalVolume(userId, Math.round(volume));
+    const roundedVolume = Math.round(volume);
+    const mediaEngine = MediaEngineStore.getMediaEngine?.() as any;
+
+    MediaEngineActions.setLocalVolume(userId, roundedVolume);
+    mediaEngine?.setLocalVolume?.(userId, roundedVolume);
 }, 75);
 
-function VoiceUserVolumeMenu({ user }: { user: any; }) {
+function VoiceUserVolumeMenu({ user, onClose }: { user: any; onClose(): void; }) {
     const volume = useStateFromStores(
         [MediaEngineStore],
-        () => MediaEngineStore.getLocalVolume(user.id) ?? 100
+        () => getLocalVolume(user.id)
     );
+    const displayName = user.globalName ?? user.displayName ?? user.username;
 
     return (
         <Menu.Menu
             navId="vc-compact-voice-panel-volume"
-            onClose={ContextMenuApi.closeContextMenu}
+            onClose={() => {
+                onClose();
+            }}
             aria-label={`${user.username} Voice Menu`}
         >
             <Menu.MenuGroup>
                 <Menu.MenuControlItem
                     id="vc-compact-voice-panel-user-volume"
-                    label={`${user.globalName ?? user.username} Volume`}
+                    label={`${displayName} Volume`}
                     control={(props, ref) => (
                         <Menu.MenuSliderControl
                             {...props}
@@ -117,14 +133,27 @@ function VoiceUserVolumeMenu({ user }: { user: any; }) {
     );
 }
 
-function VoiceMemberButton({ voiceUser, compact = false }: { voiceUser: VoiceUser; compact?: boolean; }) {
+function VoiceMemberButton({ voiceUser, compact = false, onVolumeMenuOpen, onVolumeMenuClose }: {
+    voiceUser: VoiceUser;
+    compact?: boolean;
+    onVolumeMenuOpen(): void;
+    onVolumeMenuClose(): void;
+}) {
     const { user, isStreaming } = voiceUser;
-    const name = user.globalName ?? user.username;
+    const name = user.globalName ?? user.displayName ?? user.username;
+    const username = user.username ? `@${user.username}` : "";
 
     function openVolumeMenu(event: React.MouseEvent<HTMLElement>) {
         event.preventDefault();
         event.stopPropagation();
-        ContextMenuApi.openContextMenu(event, () => <VoiceUserVolumeMenu user={user} />);
+        onVolumeMenuOpen();
+        ContextMenuApi.openContextMenu(event, () => <VoiceUserVolumeMenu user={user} onClose={onVolumeMenuClose} />);
+    }
+
+    function openProfile(event: React.MouseEvent<HTMLElement>) {
+        event.preventDefault();
+        event.stopPropagation();
+        openUserProfile(user.id);
     }
 
     return (
@@ -135,22 +164,34 @@ function VoiceMemberButton({ voiceUser, compact = false }: { voiceUser: VoiceUse
                     type="button"
                     className={cl("member", { compact })}
                     aria-label={`${name}. Right click to adjust volume.`}
-                    onClick={event => event.stopPropagation()}
+                    onClick={openProfile}
                     onContextMenu={openVolumeMenu}
                 >
-                    <img
-                        className={cl("member-avatar")}
-                        src={getAvatarUrl(user, compact ? 24 : 48)}
-                        alt=""
-                    />
-                    {isStreaming && <span className={cl("live-badge")}>LIVE</span>}
+                    <span className={cl("member-avatar-wrap")}>
+                        <img
+                            className={cl("member-avatar")}
+                            src={getAvatarUrl(user, compact ? 24 : 48)}
+                            alt=""
+                        />
+                        {isStreaming && <span className={cl("live-badge")}>LIVE</span>}
+                    </span>
+                    {!compact && (
+                        <span className={cl("member-info")}>
+                            <span className={cl("member-name")}>{name}</span>
+                            <span className={cl("member-username")}>{username}</span>
+                        </span>
+                    )}
                 </button>
             )}
         </Tooltip>
     );
 }
 
-function VoiceAvatarStrip({ voiceUsers }: { voiceUsers: VoiceUser[]; }) {
+function VoiceAvatarStrip({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
+    voiceUsers: VoiceUser[];
+    onVolumeMenuOpen(): void;
+    onVolumeMenuClose(): void;
+}) {
     if (!voiceUsers.length) return null;
 
     const visibleUsers = voiceUsers.slice(0, 3);
@@ -164,6 +205,8 @@ function VoiceAvatarStrip({ voiceUsers }: { voiceUsers: VoiceUser[]; }) {
                         key={voiceUser.user.id}
                         voiceUser={voiceUser}
                         compact
+                        onVolumeMenuOpen={onVolumeMenuOpen}
+                        onVolumeMenuClose={onVolumeMenuClose}
                     />
                 ))}
                 {hiddenCount > 0 && <span className={cl("overflow-count")}>+{hiddenCount}</span>}
@@ -172,7 +215,11 @@ function VoiceAvatarStrip({ voiceUsers }: { voiceUsers: VoiceUser[]; }) {
     );
 }
 
-function VoiceMemberList({ voiceUsers }: { voiceUsers: VoiceUser[]; }) {
+function VoiceMemberList({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
+    voiceUsers: VoiceUser[];
+    onVolumeMenuOpen(): void;
+    onVolumeMenuClose(): void;
+}) {
     if (!voiceUsers.length) {
         return (
             <Text variant="text-xs/normal" className={cl("empty")}>
@@ -187,18 +234,22 @@ function VoiceMemberList({ voiceUsers }: { voiceUsers: VoiceUser[]; }) {
                 <VoiceMemberButton
                     key={voiceUser.user.id}
                     voiceUser={voiceUser}
+                    onVolumeMenuOpen={onVolumeMenuOpen}
+                    onVolumeMenuClose={onVolumeMenuClose}
                 />
             ))}
         </div>
     );
 }
 
-function VoiceUsersPopout({ channelName, voiceUsers, count, onMouseEnter, onMouseLeave }: {
+function VoiceUsersPopout({ channelName, voiceUsers, count, onMouseEnter, onMouseLeave, onVolumeMenuOpen, onVolumeMenuClose }: {
     channelName: string;
     voiceUsers: VoiceUser[];
     count: number;
     onMouseEnter(): void;
     onMouseLeave(): void;
+    onVolumeMenuOpen(): void;
+    onVolumeMenuClose(): void;
 }) {
     return (
         <div
@@ -209,7 +260,11 @@ function VoiceUsersPopout({ channelName, voiceUsers, count, onMouseEnter, onMous
             <Text variant="text-sm/bold" className={cl("popout-title")}>{channelName}</Text>
             <Text variant="text-xs/normal" className={cl("popout-subtitle")}>{pluralise(count, "user")} connected</Text>
             <div className={cl("members")}>
-                <VoiceMemberList voiceUsers={voiceUsers} />
+                <VoiceMemberList
+                    voiceUsers={voiceUsers}
+                    onVolumeMenuOpen={onVolumeMenuOpen}
+                    onVolumeMenuClose={onVolumeMenuClose}
+                />
             </div>
         </div>
     );
@@ -218,6 +273,8 @@ function VoiceUsersPopout({ channelName, voiceUsers, count, onMouseEnter, onMous
 function CompactVoicePanel() {
     const targetRef = useRef<HTMLDivElement>(null);
     const closeTimerRef = useRef<number | undefined>(undefined);
+    const hoveringRef = useRef(false);
+    const volumeMenuOpenRef = useRef(false);
     const [showPopout, setShowPopout] = useState(false);
 
     const voiceChannelId = useStateFromStores(
@@ -280,13 +337,34 @@ function CompactVoicePanel() {
     }
 
     function openPopout() {
+        hoveringRef.current = true;
         clearCloseTimer();
         setShowPopout(true);
     }
 
-    function scheduleClose() {
+    function requestClose() {
         clearCloseTimer();
+        if (hoveringRef.current || volumeMenuOpenRef.current) return;
+
         closeTimerRef.current = window.setTimeout(() => setShowPopout(false), 175);
+    }
+
+    function scheduleClose() {
+        hoveringRef.current = false;
+        requestClose();
+    }
+
+    function keepOpenForVolumeMenu() {
+        hoveringRef.current = true;
+        volumeMenuOpenRef.current = true;
+        clearCloseTimer();
+        setShowPopout(true);
+    }
+
+    function releaseVolumeMenu() {
+        hoveringRef.current = false;
+        volumeMenuOpenRef.current = false;
+        requestClose();
     }
 
     return (
@@ -305,6 +383,8 @@ function CompactVoicePanel() {
                     count={userCount}
                     onMouseEnter={openPopout}
                     onMouseLeave={scheduleClose}
+                    onVolumeMenuOpen={keepOpenForVolumeMenu}
+                    onVolumeMenuClose={releaseVolumeMenu}
                 />
             )}
         >
@@ -327,7 +407,11 @@ function CompactVoicePanel() {
                         <span className={cl("status")}>Voice</span>
                         <span className={cl("channel")}>{channelName}</span>
                     </div>
-                    <VoiceAvatarStrip voiceUsers={voiceUsers} />
+                    <VoiceAvatarStrip
+                        voiceUsers={voiceUsers}
+                        onVolumeMenuOpen={keepOpenForVolumeMenu}
+                        onVolumeMenuClose={releaseVolumeMenu}
+                    />
                     <span className={cl("count")}>{userCount}</span>
                     <DisconnectButton />
                 </div>
