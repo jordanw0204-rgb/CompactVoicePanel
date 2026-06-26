@@ -2,11 +2,11 @@ import ErrorBoundary from "@components/ErrorBoundary";
 import { ScreenshareIcon } from "@components/Icons";
 import { debounce } from "@shared/debounce";
 import { classNameFactory } from "@utils/css";
-import { openUserProfile } from "@utils/discord";
+import { openPrivateChannel, openUserProfile } from "@utils/discord";
 import { pluralise } from "@utils/misc";
 import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { ApplicationStreamingStore, ChannelRouter, ChannelStore, ContextMenuApi, MediaEngineStore, Menu, Popout, Text, Tooltip, UserStore, useEffect, useMemo, useRef, useState, useStateFromStores, VoiceStateStore, SelectedChannelStore } from "@webpack/common";
+import { ApplicationStreamingStore, ChannelRouter, ChannelStore, ContextMenuApi, FluxDispatcher, MediaEngineStore, Menu, Popout, SoundboardStore, Text, Tooltip, UserStore, useEffect, useMemo, useRef, useState, useStateFromStores, VoiceStateStore, SelectedChannelStore } from "@webpack/common";
 
 import managedStyle from "./style.css?managed";
 
@@ -162,6 +162,36 @@ function getLocalVolume(userId: string) {
         ?? 100;
 }
 
+function isLocalMuted(userId: string) {
+    const mediaEngine = MediaEngineStore.getMediaEngine?.() as any;
+
+    return Boolean(
+        MediaEngineStore.isLocalMute(userId)
+        ?? mediaEngine?.isLocalMute?.(userId)
+    );
+}
+
+function toggleLocalMute(userId: string) {
+    const nextMuted = !isLocalMuted(userId);
+    const mediaEngine = MediaEngineStore.getMediaEngine?.() as any;
+
+    try {
+        MediaEngineActions.setLocalMute?.(userId, nextMuted);
+    } catch {
+        FluxDispatcher.dispatch({ type: "AUDIO_TOGGLE_LOCAL_MUTE", userId });
+    }
+
+    mediaEngine?.setLocalMute?.(userId, nextMuted);
+}
+
+function isSoundboardMuted(userId: string) {
+    return Boolean(SoundboardStore.isLocalSoundboardMuted?.(userId));
+}
+
+function toggleSoundboardMute(userId: string) {
+    FluxDispatcher.dispatch({ type: "AUDIO_TOGGLE_LOCAL_SOUNDBOARD_MUTE", userId });
+}
+
 const setLocalVolume = debounce((userId: string, volume: number) => {
     const roundedVolume = Math.round(volume);
     const mediaEngine = MediaEngineStore.getMediaEngine?.() as any;
@@ -170,21 +200,49 @@ const setLocalVolume = debounce((userId: string, volume: number) => {
     mediaEngine?.setLocalVolume?.(userId, roundedVolume);
 }, 75);
 
-function VoiceUserVolumeMenu({ user, onClose }: { user: any; onClose(): void; }) {
+function VoiceUserContextMenu({ user, onClose }: { user: any; onClose(): void; }) {
     const volume = useStateFromStores(
         [MediaEngineStore],
         () => getLocalVolume(user.id)
+    );
+    const muted = useStateFromStores(
+        [MediaEngineStore],
+        () => isLocalMuted(user.id)
+    );
+    const soundboardMuted = useStateFromStores(
+        [SoundboardStore],
+        () => isSoundboardMuted(user.id)
     );
     const displayName = user.globalName ?? user.displayName ?? user.username;
 
     return (
         <Menu.Menu
-            navId="vc-compact-voice-panel-volume"
+            navId="vc-compact-voice-panel-user-context"
             onClose={() => {
                 onClose();
             }}
             aria-label={`${user.username} Voice Menu`}
         >
+            <Menu.MenuGroup>
+                <Menu.MenuCheckboxItem
+                    id="vc-compact-voice-panel-user-mute"
+                    label="Mute"
+                    checked={muted}
+                    action={() => toggleLocalMute(user.id)}
+                />
+                <Menu.MenuCheckboxItem
+                    id="vc-compact-voice-panel-user-soundboard-mute"
+                    label="Mute Soundboard"
+                    checked={soundboardMuted}
+                    action={() => toggleSoundboardMute(user.id)}
+                />
+                <Menu.MenuItem
+                    id="vc-compact-voice-panel-user-message"
+                    label="Message"
+                    action={() => openPrivateChannel(user.id)}
+                />
+            </Menu.MenuGroup>
+            <Menu.MenuSeparator />
             <Menu.MenuGroup>
                 <Menu.MenuControlItem
                     id="vc-compact-voice-panel-user-volume"
@@ -227,7 +285,14 @@ function VoiceMemberButton({ voiceUser, compact = false, onVolumeMenuOpen, onVol
         event.preventDefault();
         event.stopPropagation();
         onVolumeMenuOpen();
-        ContextMenuApi.openContextMenu(event, () => <VoiceUserVolumeMenu user={user} onClose={onVolumeMenuClose} />);
+
+        const menuEvent = Object.create(event);
+        Object.defineProperties(menuEvent, {
+            clientY: { value: Math.max(8, event.clientY - 170) },
+            pageY: { value: Math.max(8, event.pageY - 170) }
+        });
+
+        ContextMenuApi.openContextMenu(menuEvent, () => <VoiceUserContextMenu user={user} onClose={onVolumeMenuClose} />);
     }
 
     function openProfile(event: React.MouseEvent<HTMLElement>) {
