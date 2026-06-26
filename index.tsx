@@ -14,7 +14,6 @@ const cl = classNameFactory("vc-compact-voice-panel-");
 const { selectVoiceChannel } = findByPropsLazy("selectVoiceChannel", "selectChannel");
 const MediaEngineActions = findByPropsLazy("setLocalVolume", "setLocalMute");
 const SpeakingStore = findByPropsLazy("isSpeaking");
-const PAGE_SIZE = 8;
 
 type VoiceUser = {
     user: any;
@@ -295,8 +294,6 @@ function VoiceMemberList({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
     onVolumeMenuOpen(): void;
     onVolumeMenuClose(): void;
 }) {
-    const [page, setPage] = useState(0);
-
     if (!voiceUsers.length) {
         return (
             <Text variant="text-xs/normal" className={cl("empty")}>
@@ -305,15 +302,9 @@ function VoiceMemberList({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
         );
     }
 
-    const pageCount = Math.max(1, Math.ceil(voiceUsers.length / PAGE_SIZE));
-    const currentPage = page % pageCount;
-    const start = currentPage * PAGE_SIZE;
-    const visibleUsers = voiceUsers.slice(start, start + PAGE_SIZE);
-    const hiddenCount = voiceUsers.length - visibleUsers.length;
-
     return (
         <div className={cl("member-grid")}>
-            {visibleUsers.map(voiceUser => (
+            {voiceUsers.map(voiceUser => (
                 <VoiceMemberButton
                     key={voiceUser.user.id}
                     voiceUser={voiceUser}
@@ -321,20 +312,6 @@ function VoiceMemberList({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
                     onVolumeMenuClose={onVolumeMenuClose}
                 />
             ))}
-            {hiddenCount > 0 && (
-                <button
-                    type="button"
-                    className={cl("member-overflow")}
-                    aria-label={`Show ${hiddenCount} more voice users`}
-                    onClick={event => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        setPage(currentPage + 1);
-                    }}
-                >
-                    +{hiddenCount}
-                </button>
-            )}
         </div>
     );
 }
@@ -378,6 +355,7 @@ function CompactVoicePanel() {
     const closeTimerRef = useRef<number | undefined>(undefined);
     const hoveringRef = useRef(false);
     const volumeMenuOpenRef = useRef(false);
+    const lastSpokeAtRef = useRef(new Map<string, number>());
     const [showPopout, setShowPopout] = useState(false);
 
     const voiceChannelId = useStateFromStores(
@@ -438,7 +416,26 @@ function CompactVoicePanel() {
                 });
             }
 
-            return [...userMap.values()];
+            const users = [...userMap.values()];
+            const now = Date.now();
+
+            for (const voiceUser of users) {
+                if (voiceUser.isSpeaking) {
+                    lastSpokeAtRef.current.set(voiceUser.user.id, now);
+                }
+            }
+
+            return users.sort((first, second) => {
+                const firstSpokeAt = lastSpokeAtRef.current.get(first.user.id) ?? 0;
+                const secondSpokeAt = lastSpokeAtRef.current.get(second.user.id) ?? 0;
+
+                if (firstSpokeAt !== secondSpokeAt) return secondSpokeAt - firstSpokeAt;
+                if (first.isSpeaking !== second.isSpeaking) return first.isSpeaking ? -1 : 1;
+
+                const firstName = first.user.globalName ?? first.user.displayName ?? first.user.username ?? "";
+                const secondName = second.user.globalName ?? second.user.displayName ?? second.user.username ?? "";
+                return firstName.localeCompare(secondName);
+            });
         },
         [activeStreamKey, channel, voiceStateKey, voiceChannelId]
     );

@@ -288,12 +288,22 @@
     gap: 5px;
     overflow-x: auto;
     overflow-y: hidden;
-    padding-bottom: 1px;
-    scrollbar-width: none;
+    padding: 1px 0 7px;
+    scrollbar-color: color-mix(in srgb, var(--interactive-muted) 58%, transparent) transparent;
+    scrollbar-width: thin;
 }
 
 .vc-compact-voice-panel-member-grid::-webkit-scrollbar {
-    display: none;
+    height: 6px;
+}
+
+.vc-compact-voice-panel-member-grid::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.vc-compact-voice-panel-member-grid::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--interactive-muted) 58%, transparent);
 }
 
 .vc-compact-voice-panel-member {
@@ -356,30 +366,6 @@
     box-shadow:
         0 0 0 2px var(--status-positive),
         0 0 0 4px color-mix(in srgb, var(--status-positive) 24%, transparent);
-}
-
-.vc-compact-voice-panel-member-overflow {
-    display: grid;
-    place-items: center;
-    flex: 0 0 36px;
-    width: 36px;
-    height: 32px;
-    padding: 0;
-    border: 0;
-    border-radius: 999px;
-    color: var(--text-normal);
-    background: color-mix(in srgb, var(--background-floating) 88%, transparent);
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--background-modifier-accent) 80%, transparent);
-    cursor: pointer;
-    font-size: 11px;
-    font-weight: 800;
-}
-
-.vc-compact-voice-panel-member-overflow:hover,
-.vc-compact-voice-panel-member-overflow:focus-visible {
-    color: var(--white-500, #fff);
-    background: color-mix(in srgb, var(--background-modifier-hover) 88%, transparent);
-    outline: none;
 }
 
 .vc-compact-voice-panel-member-tooltip {
