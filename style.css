@@ -14,6 +14,8 @@
     background: color-mix(in srgb, var(--background-modifier-hover) 82%, transparent);
     cursor: pointer;
     backdrop-filter: blur(8px);
+    transition: width 160ms ease, min-width 160ms ease, max-width 160ms ease, margin-left 160ms ease, background 120ms ease;
+    z-index: 2;
 }
 
 .vc-compact-voice-panel-tile:hover,
@@ -22,6 +24,56 @@
     color: var(--interactive-hover);
     background: color-mix(in srgb, var(--background-modifier-selected) 88%, transparent);
     outline: none;
+}
+
+.vc-compact-voice-panel-tile.vc-compact-voice-panel-expanded {
+    width: 316px;
+    min-width: 316px;
+    max-width: 316px;
+    margin-left: -140px;
+    z-index: 5;
+    box-shadow: var(--elevation-low);
+}
+
+.vc-compact-voice-panel-width-toggle {
+    position: absolute;
+    left: -10px;
+    top: 50%;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid color-mix(in srgb, var(--background-modifier-accent) 72%, transparent);
+    border-radius: 999px;
+    color: var(--interactive-normal);
+    background: color-mix(in srgb, var(--background-floating) 92%, transparent);
+    box-shadow: var(--elevation-low);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-50%) scale(0.96);
+    transition: opacity 120ms ease, transform 120ms ease, color 120ms ease, background 120ms ease;
+}
+
+.vc-compact-voice-panel-tile:hover .vc-compact-voice-panel-width-toggle,
+.vc-compact-voice-panel-tile:focus-within .vc-compact-voice-panel-width-toggle,
+.vc-compact-voice-panel-tile.vc-compact-voice-panel-shown .vc-compact-voice-panel-width-toggle {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(-50%) scale(1);
+}
+
+.vc-compact-voice-panel-width-toggle:hover,
+.vc-compact-voice-panel-width-toggle:focus-visible {
+    color: var(--interactive-hover);
+    background: color-mix(in srgb, var(--background-modifier-hover) 84%, var(--background-floating));
+    outline: none;
+}
+
+.vc-compact-voice-panel-width-toggle svg {
+    display: block;
 }
 
 .vc-compact-voice-panel-voice-icon {

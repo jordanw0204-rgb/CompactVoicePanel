@@ -111,6 +111,38 @@ function ScreenShareButton({ voiceChannelId }: { voiceChannelId: string; }) {
     );
 }
 
+function WidthToggleButton({ expanded, onToggle }: { expanded: boolean; onToggle(): void; }) {
+    return (
+        <Tooltip text={expanded ? "Shrink Voice Panel" : "Expand Voice Panel"}>
+            {tooltipProps => (
+                <button
+                    {...tooltipProps}
+                    className={cl("width-toggle")}
+                    type="button"
+                    aria-label={expanded ? "Shrink voice panel" : "Expand voice panel"}
+                    aria-pressed={expanded}
+                    onClick={event => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onToggle();
+                    }}
+                >
+                    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d={expanded ? "M9 6l6 6-6 6" : "M15 6l-6 6 6 6"}
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2.5"
+                        />
+                    </svg>
+                </button>
+            )}
+        </Tooltip>
+    );
+}
+
 function getAvatarUrl(user: any, size = 48) {
     return user.getAvatarURL?.(void 0, size, false)
         ?? user.getAvatarURL?.(void 0, size)
@@ -448,6 +480,7 @@ function CompactVoicePanel() {
     const lastSpokeAtRef = useRef(new Map<string, number>());
     const speakingRef = useRef(new Map<string, boolean>());
     const [showPopout, setShowPopout] = useState(false);
+    const [expanded, setExpanded] = useState(false);
     const [speakingKey, setSpeakingKey] = useState("");
 
     const voiceChannelId = useStateFromStores(
@@ -633,7 +666,7 @@ function CompactVoicePanel() {
                 <div
                     {...popoutProps}
                     ref={targetRef}
-                    className={cl("tile", { shown: isShown })}
+                    className={cl("tile", { shown: isShown, expanded })}
                     role="button"
                     tabIndex={0}
                     aria-label={`Voice connected to ${channelName}`}
@@ -641,6 +674,10 @@ function CompactVoicePanel() {
                     onMouseLeave={scheduleClose}
                     onClick={() => ChannelRouter.transitionToChannel(voiceChannelId)}
                 >
+                    <WidthToggleButton
+                        expanded={expanded}
+                        onToggle={() => setExpanded(value => !value)}
+                    />
                     <div className={cl("voice-icon")}>
                         <VoiceIcon />
                     </div>
