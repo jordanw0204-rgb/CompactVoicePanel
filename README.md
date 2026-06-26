@@ -1,67 +1,55 @@
-# CompactVoicePanel
+# Vencord Compact Voice Panel
 
-A custom Vencord userplugin that replaces Discord's large bottom-left voice connection panel with a compact voice tile beside the account controls.
+Compact Voice Panel replaces Discord's bulky bottom-left voice connection block with a smaller tile next to your account controls.
 
-It is designed for people who want the voice area to take less room while still keeping useful call information visible.
+The goal is simple: keep the call controls usable without letting the voice panel eat the whole bottom bar.
 
-## What It Does
+## Features
 
-- Hides Discord's large voice connection panel in the bottom-left sidebar.
-- Adds a compact voice tile next to the account panel.
+- Replaces the large voice connection block with a compact tile.
 - Shows the current voice channel or call name.
-- Shows a small strip of connected user avatars.
-- Opens a hover popout with connected voice users.
-- Lets you click the tile to jump back to the connected voice channel.
-- Shows a disconnect button when hovering the tile.
+- Shows a small connected-user avatar strip.
+- Opens a member popout on hover.
+- Jumps back to the voice channel when clicked.
+- Shows a disconnect button while hovering the tile.
+- Keeps Discord's normal mute, deafen, and settings buttons in the account-control row.
 
-## Dependencies
+## Requirements
 
-This plugin is standalone. It does not require any private companion plugins.
+- A source build of Vencord.
+- Discord desktop.
 
-It only installs the compact voice UI. Fake mute/deafen controls are not included in this public plugin.
+This plugin is standalone. It does not require any private companion plugin.
 
+## Install Vencord From Source
 
-## Installing Vencord From Source
+Custom Vencord plugins only work with a source build.
 
-Custom Vencord plugins require a source build of Vencord. The normal one-click installer is not enough for custom userplugins.
+Install:
 
-1. Install the prerequisites:
-   - [Git](https://git-scm.com/downloads)
-   - [Node.js](https://nodejs.org/)
-   - [pnpm](https://pnpm.io/installation)
+- [Git](https://git-scm.com/downloads)
+- [Node.js](https://nodejs.org/)
+- [pnpm](https://pnpm.io/installation)
 
-2. Verify they are available in your terminal:
-
-```sh
-git --version
-node --version
-pnpm --version
-```
-
-3. Clone Vencord:
+Then clone and install Vencord:
 
 ```sh
 git clone https://github.com/Vendicated/Vencord
 cd Vencord
-```
-
-4. Install Vencord dependencies:
-
-```sh
 pnpm install --frozen-lockfile
 ```
 
-## Installing This Plugin
+## Install This Plugin
 
-From inside your Vencord folder:
+From the Vencord folder:
 
 ```sh
 mkdir -p src/userplugins
 cd src/userplugins
-git clone https://github.com/jordanw0204-rgb/CompactVoicePanel
+git clone https://github.com/jordanw0204-rgb/vencord-compact-voice-panel CompactVoicePanel
 ```
 
-Then build and inject Vencord:
+Build and inject Vencord:
 
 ```sh
 cd ../..
@@ -69,47 +57,35 @@ pnpm build
 pnpm inject
 ```
 
-After injection finishes, fully restart Discord.
+Restart Discord after injection.
 
-## Enabling The Plugin
+## Enable
 
-1. Open Discord.
-2. Go to `User Settings`.
-3. Open the `Vencord` plugin settings.
-4. Enable `CompactVoicePanel`.
-5. Join a voice channel or call to see the compact tile.
+1. Open Discord settings.
+2. Go to `Vencord` -> `Plugins`.
+3. Enable `CompactVoicePanel`.
+4. Join a voice channel or call.
 
-## Updating
-
-From the plugin folder:
+## Update
 
 ```sh
 cd src/userplugins/CompactVoicePanel
 git pull
-```
-
-Then rebuild and reinject Vencord:
-
-```sh
 cd ../../..
 pnpm build
 pnpm inject
 ```
 
-Restart Discord afterward.
+Restart Discord after updating.
 
 ## Troubleshooting
 
-- If the plugin does not appear, confirm the folder is exactly `src/userplugins/CompactVoicePanel`.
-- If Vencord fails to build, confirm your Vencord source dependencies are installed with `pnpm install --frozen-lockfile`.
-- If Discord still shows the large voice panel, restart Discord after injecting.
-- If the bottom-left controls look cramped, another account-panel plugin or custom theme may be taking extra space.
+- Plugin missing: make sure the folder is `src/userplugins/CompactVoicePanel`.
+- Build failed: run `pnpm install --frozen-lockfile` in the Vencord folder.
+- Old voice panel still visible: rebuild, inject, and fully restart Discord.
+- Account controls look cramped: another account-panel plugin or theme may be taking extra space.
 
-## Notes
+## Links
 
-This is a custom userplugin, not an official Vencord plugin. Use it at your own risk and read the source before installing custom plugins from anyone.
-
-Official Vencord docs:
-
-- [Installing Vencord from source](https://docs.vencord.dev/installing/)
-- [Installing custom plugins](https://docs.vencord.dev/installing/custom-plugins/)
+- [Vencord source install docs](https://docs.vencord.dev/installing/)
+- [Vencord custom plugin docs](https://docs.vencord.dev/installing/custom-plugins/)
