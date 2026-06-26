@@ -5,14 +5,17 @@ import { openUserProfile } from "@utils/discord";
 import { pluralise } from "@utils/misc";
 import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { ApplicationStreamingStore, ChannelActionCreators, ChannelRouter, ChannelStore, ContextMenuApi, FluxDispatcher, MediaEngineStore, Menu, Popout, SoundboardStore, Text, Tooltip, UserStore, useEffect, useMemo, useRef, useState, useStateFromStores, VoiceStateStore, SelectedChannelStore } from "@webpack/common";
+import { ApplicationStreamingStore, ChannelRouter, ChannelStore, ContextMenuApi, FluxDispatcher, MediaEngineStore, Menu, Popout, SoundboardStore, Text, Tooltip, UserStore, useEffect, useMemo, useRef, useState, useStateFromStores, VoiceStateStore, SelectedChannelStore } from "@webpack/common";
 
 import managedStyle from "./style.css?managed";
 
 const cl = classNameFactory("vc-compact-voice-panel-");
 const { selectVoiceChannel } = findByPropsLazy("selectVoiceChannel", "selectChannel");
-const MediaEngineActions = findByPropsLazy("setLocalVolume", "setLocalMute");
+const ChannelActionCreators = findByPropsLazy("openPrivateChannel", "getDMChannel");
+const MediaEngineActions = findByPropsLazy("setLocalVolume", "toggleLocalMute");
 const SpeakingStore = findByPropsLazy("isSpeaking");
+const pendingVolumes = new Map<string, number>();
+const volumeFrames = new Map<string, number>();
 
 type VoiceUser = {
     user: any;
@@ -186,11 +189,7 @@ function getPrivateCallUsers(channel: ReturnType<typeof ChannelStore.getChannel>
 }
 
 function getLocalVolume(userId: string) {
-    const mediaEngine = MediaEngineStore.getMediaEngine?.() as any;
-
-    return (MediaEngineStore as any).getLocalVolume?.(userId)
-        ?? mediaEngine?.getLocalVolume?.(userId)
-        ?? 100;
+    return MediaEngineStore.getLocalVolume(userId) ?? 100;
 }
 
 function isLocalMuted(userId: string) {
@@ -203,16 +202,11 @@ function isLocalMuted(userId: string) {
 }
 
 function toggleLocalMute(userId: string) {
-    const nextMuted = !isLocalMuted(userId);
-    const mediaEngine = MediaEngineStore.getMediaEngine?.() as any;
-
     try {
-        MediaEngineActions.setLocalMute?.(userId, nextMuted);
+        MediaEngineActions.toggleLocalMute(userId);
     } catch {
         FluxDispatcher.dispatch({ type: "AUDIO_TOGGLE_LOCAL_MUTE", userId });
     }
-
-    mediaEngine?.setLocalMute?.(userId, nextMuted);
 }
 
 function isSoundboardMuted(userId: string) {
@@ -224,8 +218,7 @@ function toggleSoundboardMute(userId: string) {
 }
 
 function openDirectMessage(userId: string) {
-    const currentUserId = UserStore.getCurrentUser()?.id;
-    if (!currentUserId || userId === currentUserId) return;
+    if (userId === UserStore.getCurrentUser()?.id) return;
 
     const existingChannelId = ChannelStore.getDMFromUserId(userId);
     if (existingChannelId) {
@@ -233,34 +226,43 @@ function openDirectMessage(userId: string) {
         return;
     }
 
-    ChannelActionCreators.openPrivateChannel(currentUserId, userId);
-
-    let attempts = 0;
-    const intervalId = window.setInterval(() => {
-        const channelId = ChannelStore.getDMFromUserId(userId);
-        attempts++;
-
-        if (!channelId && attempts < 10) return;
-
-        window.clearInterval(intervalId);
-        if (channelId) ChannelRouter.transitionToChannel(channelId);
-    }, 100);
+    ChannelActionCreators.openPrivateChannel({ recipientIds: userId, navigateToChannel: true });
 }
 
 function setLocalVolume(userId: string, volume: number) {
-    const roundedVolume = Math.round(volume);
-    const mediaEngine = MediaEngineStore.getMediaEngine?.() as any;
+    const roundedVolume = Math.max(0, Math.min(200, Math.round(volume)));
+    pendingVolumes.set(userId, roundedVolume);
 
-    (MediaEngineStore as any).setLocalVolume?.(userId, roundedVolume);
-    MediaEngineActions.setLocalVolume?.(userId, roundedVolume);
-    mediaEngine?.setLocalVolume?.(userId, roundedVolume);
+    if (volumeFrames.has(userId)) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+        volumeFrames.delete(userId);
+
+        const nextVolume = pendingVolumes.get(userId);
+        if (nextVolume == null) return;
+
+        pendingVolumes.delete(userId);
+        MediaEngineActions.setLocalVolume(userId, nextVolume);
+    });
+
+    volumeFrames.set(userId, frameId);
+}
+
+function clearPendingVolumeWrites() {
+    for (const frameId of volumeFrames.values()) {
+        window.cancelAnimationFrame(frameId);
+    }
+
+    volumeFrames.clear();
+    pendingVolumes.clear();
 }
 
 function VoiceUserContextMenu({ user, onClose }: { user: any; onClose(): void; }) {
-    const volume = useStateFromStores(
+    const storedVolume = useStateFromStores(
         [MediaEngineStore],
         () => getLocalVolume(user.id)
     );
+    const [volume, setVolume] = useState(storedVolume);
     const muted = useStateFromStores(
         [MediaEngineStore],
         () => isLocalMuted(user.id)
@@ -270,6 +272,10 @@ function VoiceUserContextMenu({ user, onClose }: { user: any; onClose(): void; }
         () => isSoundboardMuted(user.id)
     );
     const displayName = user.globalName ?? user.displayName ?? user.username;
+
+    useEffect(() => {
+        setVolume(storedVolume);
+    }, [storedVolume, user.id]);
 
     return (
         <Menu.Menu
@@ -310,7 +316,10 @@ function VoiceUserContextMenu({ user, onClose }: { user: any; onClose(): void; }
                             value={volume}
                             minValue={0}
                             maxValue={200}
-                            onChange={(value: number) => setLocalVolume(user.id, value)}
+                            onChange={(value: number) => {
+                                setVolume(value);
+                                setLocalVolume(user.id, value);
+                            }}
                             renderValue={(value: number) => `${Math.round(value)}%`}
                         />
                     )}
@@ -741,4 +750,5 @@ export default definePlugin({
         }
     ],
     CompactVoicePanel: ErrorBoundary.wrap(CompactVoicePanel, { noop: true }),
+    stop: clearPendingVolumeWrites,
 });
