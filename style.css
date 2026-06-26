@@ -1,0 +1,202 @@
+.vc-compact-voice-panel-tile {
+    box-sizing: border-box;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 156px;
+    min-width: 156px;
+    max-width: 156px;
+    height: 38px;
+    padding: 4px 6px 4px 7px;
+    border-radius: 8px;
+    color: var(--interactive-normal);
+    background: color-mix(in srgb, var(--background-modifier-hover) 82%, transparent);
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+}
+
+.vc-compact-voice-panel-tile:hover,
+.vc-compact-voice-panel-tile:focus-visible,
+.vc-compact-voice-panel-tile.vc-compact-voice-panel-shown {
+    color: var(--interactive-hover);
+    background: color-mix(in srgb, var(--background-modifier-selected) 88%, transparent);
+    outline: none;
+}
+
+.vc-compact-voice-panel-voice-icon {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    min-width: 18px;
+    height: 18px;
+    color: var(--status-positive);
+}
+
+.vc-compact-voice-panel-text {
+    display: flex;
+    flex: 1 1 40px;
+    min-width: 0;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.vc-compact-voice-panel-status {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 12px;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.vc-compact-voice-panel-channel {
+    overflow: hidden;
+    color: var(--white-500, #fff);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vc-compact-voice-panel-count {
+    display: none;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 9px;
+    color: var(--text-normal);
+    background: var(--background-secondary-alt);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 18px;
+}
+
+.vc-compact-voice-panel-icon-button {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    color: var(--interactive-normal);
+    background: transparent;
+    cursor: pointer;
+}
+
+.vc-compact-voice-panel-icon-button:hover,
+.vc-compact-voice-panel-icon-button:focus-visible {
+    color: var(--interactive-hover);
+    background: var(--background-modifier-hover);
+    outline: none;
+}
+
+.vc-compact-voice-panel-icon-button svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+}
+
+.vc-compact-voice-panel-disconnect {
+    color: var(--status-danger);
+    width: 0;
+    min-width: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(4px);
+    transition: width 120ms ease, min-width 120ms ease, opacity 120ms ease, transform 120ms ease, background 120ms ease;
+}
+
+.vc-compact-voice-panel-tile:hover .vc-compact-voice-panel-disconnect,
+.vc-compact-voice-panel-tile.vc-compact-voice-panel-shown .vc-compact-voice-panel-disconnect,
+.vc-compact-voice-panel-disconnect:focus-visible {
+    width: 28px;
+    min-width: 28px;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+}
+
+.vc-compact-voice-panel-disconnect:hover,
+.vc-compact-voice-panel-disconnect:focus-visible {
+    color: var(--status-danger);
+    background: color-mix(in srgb, var(--status-danger) 16%, transparent);
+}
+
+.vc-compact-voice-panel-avatars,
+.vc-compact-voice-panel-members {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    min-height: 24px;
+    padding: 2px 5px;
+    border: 1px solid color-mix(in srgb, var(--background-modifier-accent) 70%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--background-secondary-alt) 74%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--white-500) 5%, transparent);
+    backdrop-filter: blur(10px);
+}
+
+.vc-compact-voice-panel-tile:hover .vc-compact-voice-panel-avatars,
+.vc-compact-voice-panel-tile.vc-compact-voice-panel-shown .vc-compact-voice-panel-avatars {
+    background: color-mix(in srgb, var(--background-floating) 78%, transparent);
+}
+
+.vc-compact-voice-panel-popout {
+    box-sizing: border-box;
+    width: 236px;
+    padding: 12px;
+    border: 1px solid var(--background-modifier-accent);
+    border-radius: 8px;
+    color: var(--text-normal);
+    background: var(--background-floating);
+    box-shadow: var(--elevation-high);
+}
+
+.vc-compact-voice-panel-popout-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vc-compact-voice-panel-popout-subtitle {
+    margin-top: 2px;
+    color: var(--text-muted);
+}
+
+.vc-compact-voice-panel-members {
+    margin-top: 10px;
+    justify-content: flex-start;
+    width: fit-content;
+    min-height: 34px;
+    padding: 4px 8px;
+    border-radius: 12px;
+}
+
+[class*="panels"] > [class*="container"]:has([class*="rtcConnectionStatus"]),
+[class*="panels"] > [class*="wrapper"]:has([class*="rtcConnectionStatus"]) {
+    display: none !important;
+}
+
+[class*="panels"] [class*="accountPopoutButtonWrapper"] {
+    min-width: 0;
+}
+
+[class*="panels"] [class*="avatarWrapper"] {
+    flex: 0 1 136px;
+    min-width: 0;
+    max-width: 136px;
+}
+
+[class*="panels"] [class*="nameTag"],
+[class*="panels"] [class*="panelTitleContainer"] {
+    min-width: 0;
+    max-width: 78px;
+}
