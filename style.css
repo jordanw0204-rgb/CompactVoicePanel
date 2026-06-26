@@ -129,8 +129,7 @@
     background: color-mix(in srgb, var(--status-danger) 16%, transparent);
 }
 
-.vc-compact-voice-panel-avatars,
-.vc-compact-voice-panel-members {
+.vc-compact-voice-panel-avatars {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -149,15 +148,71 @@
     background: color-mix(in srgb, var(--background-floating) 78%, transparent);
 }
 
+.vc-compact-voice-panel-avatar-strip {
+    display: flex;
+    align-items: center;
+}
+
+.vc-compact-voice-panel-avatar-strip .vc-compact-voice-panel-member {
+    margin-left: -6px;
+}
+
+.vc-compact-voice-panel-avatar-strip .vc-compact-voice-panel-member:first-child {
+    margin-left: 0;
+}
+
+.vc-compact-voice-panel-member.vc-compact-voice-panel-compact {
+    width: 20px;
+    height: 20px;
+}
+
+.vc-compact-voice-panel-member.vc-compact-voice-panel-compact::before {
+    inset: -2px;
+}
+
+.vc-compact-voice-panel-member.vc-compact-voice-panel-compact .vc-compact-voice-panel-member-avatar {
+    width: 20px;
+    height: 20px;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--background-secondary-alt) 92%, transparent);
+}
+
+.vc-compact-voice-panel-member.vc-compact-voice-panel-compact .vc-compact-voice-panel-live-badge {
+    right: -4px;
+    bottom: -2px;
+    width: 7px;
+    height: 7px;
+    padding: 0;
+    border-width: 1px;
+    font-size: 0;
+    line-height: 0;
+}
+
+.vc-compact-voice-panel-overflow-count {
+    display: grid;
+    place-items: center;
+    min-width: 19px;
+    height: 19px;
+    margin-left: -4px;
+    padding: 0 5px;
+    border-radius: 999px;
+    color: var(--text-normal);
+    background: var(--background-secondary-alt);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 19px;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--background-floating) 80%, transparent);
+}
+
 .vc-compact-voice-panel-popout {
     box-sizing: border-box;
-    width: 236px;
+    width: 244px;
     padding: 12px;
-    border: 1px solid var(--background-modifier-accent);
+    border: 1px solid color-mix(in srgb, var(--background-modifier-accent) 82%, transparent);
     border-radius: 8px;
     color: var(--text-normal);
-    background: var(--background-floating);
+    background: color-mix(in srgb, var(--background-floating) 94%, var(--background-secondary-alt));
     box-shadow: var(--elevation-high);
+    backdrop-filter: blur(14px);
 }
 
 .vc-compact-voice-panel-popout-title {
@@ -173,11 +228,84 @@
 
 .vc-compact-voice-panel-members {
     margin-top: 10px;
-    justify-content: flex-start;
-    width: fit-content;
-    min-height: 34px;
-    padding: 4px 8px;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 46px;
+    padding: 8px;
+    border: 1px solid color-mix(in srgb, var(--background-modifier-accent) 72%, transparent);
     border-radius: 12px;
+    background: color-mix(in srgb, var(--background-secondary-alt) 82%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--white-500) 4%, transparent);
+}
+
+.vc-compact-voice-panel-member-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.vc-compact-voice-panel-member {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: var(--text-normal);
+    background: transparent;
+    cursor: pointer;
+}
+
+.vc-compact-voice-panel-member::before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 999px;
+    background: transparent;
+    transition: background 120ms ease, box-shadow 120ms ease;
+}
+
+.vc-compact-voice-panel-member:hover::before,
+.vc-compact-voice-panel-member:focus-visible::before {
+    background: color-mix(in srgb, var(--background-modifier-hover) 72%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--background-modifier-accent) 82%, transparent);
+}
+
+.vc-compact-voice-panel-member:focus-visible {
+    outline: none;
+}
+
+.vc-compact-voice-panel-member-avatar {
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--background-tertiary);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--background-floating) 94%, transparent);
+}
+
+.vc-compact-voice-panel-live-badge {
+    position: absolute;
+    right: -7px;
+    bottom: -3px;
+    z-index: 1;
+    padding: 1px 4px;
+    border: 2px solid var(--background-floating);
+    border-radius: 999px;
+    color: var(--white-500, #fff);
+    background: var(--status-danger);
+    font-size: 8px;
+    font-weight: 800;
+    line-height: 10px;
+    letter-spacing: 0;
+}
+
+.vc-compact-voice-panel-empty {
+    color: var(--text-muted);
 }
 
 [class*="panels"] > [class*="container"]:has([class*="rtcConnectionStatus"]),

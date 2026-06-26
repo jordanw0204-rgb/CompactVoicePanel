@@ -10,6 +10,8 @@ The goal is simple: keep the call controls usable without letting the voice pane
 - Shows the current voice channel or call name.
 - Shows a small connected-user avatar strip.
 - Opens a member popout on hover.
+- Lets you right-click voice user avatars to adjust their local volume.
+- Marks users who are currently streaming with a small live badge.
 - Jumps back to the voice channel when clicked.
 - Shows a disconnect button while hovering the tile.
 - Keeps Discord's normal mute, deafen, and settings buttons in the account-control row.
