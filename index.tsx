@@ -1,6 +1,5 @@
 import ErrorBoundary from "@components/ErrorBoundary";
 import { ScreenshareIcon } from "@components/Icons";
-import { debounce } from "@shared/debounce";
 import { classNameFactory } from "@utils/css";
 import { openUserProfile } from "@utils/discord";
 import { pluralise } from "@utils/misc";
@@ -189,8 +188,8 @@ function getPrivateCallUsers(channel: ReturnType<typeof ChannelStore.getChannel>
 function getLocalVolume(userId: string) {
     const mediaEngine = MediaEngineStore.getMediaEngine?.() as any;
 
-    return mediaEngine?.getLocalVolume?.(userId)
-        ?? MediaEngineStore.getLocalVolume(userId)
+    return (MediaEngineStore as any).getLocalVolume?.(userId)
+        ?? mediaEngine?.getLocalVolume?.(userId)
         ?? 100;
 }
 
@@ -248,13 +247,14 @@ function openDirectMessage(userId: string) {
     }, 100);
 }
 
-const setLocalVolume = debounce((userId: string, volume: number) => {
+function setLocalVolume(userId: string, volume: number) {
     const roundedVolume = Math.round(volume);
     const mediaEngine = MediaEngineStore.getMediaEngine?.() as any;
 
-    MediaEngineActions.setLocalVolume(userId, roundedVolume);
+    (MediaEngineStore as any).setLocalVolume?.(userId, roundedVolume);
+    MediaEngineActions.setLocalVolume?.(userId, roundedVolume);
     mediaEngine?.setLocalVolume?.(userId, roundedVolume);
-}, 75);
+}
 
 function VoiceUserContextMenu({ user, onClose }: { user: any; onClose(): void; }) {
     const volume = useStateFromStores(
@@ -363,7 +363,7 @@ function VoiceMemberButton({ voiceUser, compact = false, onVolumeMenuOpen, onVol
                 <button
                     {...tooltipProps}
                     type="button"
-                    className={cl("member", { compact, speaking: isSpeaking })}
+                    className={cl("member", { compact, speaking: isSpeaking, streaming: isStreaming })}
                     aria-label={`${name}. Right click to adjust volume.`}
                     onClick={openProfile}
                     onContextMenu={openVolumeMenu}

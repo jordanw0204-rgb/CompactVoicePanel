@@ -216,10 +216,24 @@
 
 .vc-compact-voice-panel-avatar-strip .vc-compact-voice-panel-member {
     margin-left: -6px;
+    z-index: 1;
 }
 
 .vc-compact-voice-panel-avatar-strip .vc-compact-voice-panel-member:first-child {
     margin-left: 0;
+}
+
+.vc-compact-voice-panel-avatar-strip .vc-compact-voice-panel-member.vc-compact-voice-panel-speaking {
+    z-index: 2;
+}
+
+.vc-compact-voice-panel-avatar-strip .vc-compact-voice-panel-member.vc-compact-voice-panel-streaming {
+    z-index: 3;
+}
+
+.vc-compact-voice-panel-avatar-strip .vc-compact-voice-panel-member:hover,
+.vc-compact-voice-panel-avatar-strip .vc-compact-voice-panel-member:focus-visible {
+    z-index: 4;
 }
 
 .vc-compact-voice-panel-member.vc-compact-voice-panel-compact {
@@ -484,7 +498,7 @@
     position: absolute;
     right: -7px;
     bottom: -3px;
-    z-index: 1;
+    z-index: 3;
     padding: 1px 4px;
     border: 2px solid var(--background-floating);
     border-radius: 999px;
