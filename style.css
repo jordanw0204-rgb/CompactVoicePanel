@@ -163,6 +163,7 @@
 
 .vc-compact-voice-panel-member.vc-compact-voice-panel-compact {
     display: grid;
+    flex: 0 0 20px;
     place-items: center;
     width: 20px;
     min-width: 20px;
@@ -217,7 +218,7 @@
 
 .vc-compact-voice-panel-popout {
     box-sizing: border-box;
-    width: 244px;
+    width: 286px;
     padding: 12px;
     border: 1px solid color-mix(in srgb, var(--background-modifier-accent) 82%, transparent);
     border-radius: 8px;
@@ -225,6 +226,17 @@
     background: color-mix(in srgb, var(--background-floating) 94%, var(--background-secondary-alt));
     box-shadow: var(--elevation-high);
     backdrop-filter: blur(14px);
+}
+
+.vc-compact-voice-panel-popout-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.vc-compact-voice-panel-popout-copy {
+    min-width: 0;
+    flex: 1 1 auto;
 }
 
 .vc-compact-voice-panel-popout-title {
@@ -238,12 +250,26 @@
     color: var(--text-muted);
 }
 
+.vc-compact-voice-panel-screenshare {
+    width: 30px;
+    min-width: 30px;
+    height: 30px;
+    color: var(--interactive-normal);
+    background: color-mix(in srgb, var(--background-secondary-alt) 76%, transparent);
+}
+
+.vc-compact-voice-panel-screenshare:hover,
+.vc-compact-voice-panel-screenshare:focus-visible {
+    color: var(--interactive-active);
+    background: color-mix(in srgb, var(--background-modifier-hover) 84%, transparent);
+}
+
 .vc-compact-voice-panel-members {
     margin-top: 10px;
     box-sizing: border-box;
     width: 100%;
-    min-height: 46px;
-    padding: 8px;
+    min-height: 72px;
+    padding: 8px 8px 9px;
     border: 1px solid color-mix(in srgb, var(--background-modifier-accent) 72%, transparent);
     border-radius: 12px;
     background: color-mix(in srgb, var(--background-secondary-alt) 82%, transparent);
@@ -252,25 +278,36 @@
 
 .vc-compact-voice-panel-member-grid {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    align-items: flex-start;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 1px;
+    scrollbar-width: none;
+}
+
+.vc-compact-voice-panel-member-grid::-webkit-scrollbar {
+    display: none;
 }
 
 .vc-compact-voice-panel-member {
     position: relative;
     display: flex;
+    flex: 0 0 54px;
     align-items: center;
-    gap: 10px;
-    width: 100%;
+    justify-content: flex-start;
+    flex-direction: column;
+    gap: 5px;
+    width: 54px;
     min-width: 0;
-    height: 42px;
-    padding: 5px 7px;
+    height: 58px;
+    padding: 5px 4px 4px;
     border: 0;
     border-radius: 8px;
     color: var(--text-normal);
     background: transparent;
     cursor: pointer;
-    text-align: left;
+    text-align: center;
 }
 
 .vc-compact-voice-panel-member::before {
@@ -311,35 +348,51 @@
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--background-floating) 94%, transparent);
 }
 
-.vc-compact-voice-panel-member-info {
+.vc-compact-voice-panel-member-label {
     position: relative;
     z-index: 1;
-    display: flex;
+    display: block;
+    width: 100%;
     min-width: 0;
-    flex: 1 1 auto;
-    flex-direction: column;
-    gap: 1px;
+    height: 14px;
 }
 
 .vc-compact-voice-panel-member-name,
 .vc-compact-voice-panel-member-username {
+    position: absolute;
+    inset: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    transition: opacity 120ms ease, transform 120ms ease;
     white-space: nowrap;
 }
 
 .vc-compact-voice-panel-member-name {
     color: var(--header-primary);
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
-    line-height: 16px;
+    line-height: 14px;
 }
 
 .vc-compact-voice-panel-member-username {
     color: var(--text-muted);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
     line-height: 14px;
+    opacity: 0;
+    transform: translateY(2px);
+}
+
+.vc-compact-voice-panel-member:hover .vc-compact-voice-panel-member-name,
+.vc-compact-voice-panel-member:focus-visible .vc-compact-voice-panel-member-name {
+    opacity: 0;
+    transform: translateY(-2px);
+}
+
+.vc-compact-voice-panel-member:hover .vc-compact-voice-panel-member-username,
+.vc-compact-voice-panel-member:focus-visible .vc-compact-voice-panel-member-username {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .vc-compact-voice-panel-live-badge {

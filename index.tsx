@@ -1,4 +1,5 @@
 import ErrorBoundary from "@components/ErrorBoundary";
+import { ScreenshareIcon } from "@components/Icons";
 import { debounce } from "@shared/debounce";
 import { classNameFactory } from "@utils/css";
 import { openUserProfile } from "@utils/discord";
@@ -47,6 +48,54 @@ function DisconnectButton() {
                     <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                         <path fill="var(--status-danger)" d="M21.16 8.92c.5.5.84 1.17.84 1.88v2.4c0 .98-.8 1.8-1.8 1.8h-3.9c-.83 0-1.5-.67-1.5-1.5v-1.07a9.4 9.4 0 0 0-5.6 0v1.07c0 .83-.67 1.5-1.5 1.5H3.8c-1 0-1.8-.82-1.8-1.8v-2.4c0-.71.34-1.38.84-1.88 5.05-5.05 13.27-5.05 18.32 0Z" />
                     </svg>
+                </button>
+            )}
+        </Tooltip>
+    );
+}
+
+function clickDiscordScreenShareButton() {
+    const panels = document.querySelector<HTMLElement>("[class*='panels']");
+    const buttons = panels?.querySelectorAll<HTMLElement>("button,[role='button']");
+    if (!buttons) return false;
+
+    for (const button of buttons) {
+        if (button.closest(`.${cl("popout")}`)) continue;
+
+        const label = [
+            button.getAttribute("aria-label"),
+            button.getAttribute("title"),
+            button.textContent
+        ].filter(Boolean).join(" ");
+
+        if (/\b(screen|screenshare|screen share|go live|share your screen)\b/i.test(label)) {
+            button.click();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function ScreenShareButton({ voiceChannelId }: { voiceChannelId: string; }) {
+    return (
+        <Tooltip text="Share Screen">
+            {tooltipProps => (
+                <button
+                    {...tooltipProps}
+                    className={cl("icon-button", "screenshare")}
+                    type="button"
+                    aria-label="Share Screen"
+                    onClick={event => {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        if (!clickDiscordScreenShareButton()) {
+                            ChannelRouter.transitionToChannel(voiceChannelId);
+                        }
+                    }}
+                >
+                    <ScreenshareIcon width={18} height={18} />
                 </button>
             )}
         </Tooltip>
@@ -167,6 +216,12 @@ function VoiceMemberButton({ voiceUser, compact = false, onVolumeMenuOpen, onVol
                     onClick={openProfile}
                     onContextMenu={openVolumeMenu}
                 >
+                    {!compact && (
+                        <span className={cl("member-label")}>
+                            <span className={cl("member-name")}>{name}</span>
+                            <span className={cl("member-username")}>{username}</span>
+                        </span>
+                    )}
                     <span className={cl("member-avatar-wrap")}>
                         <img
                             className={cl("member-avatar")}
@@ -175,12 +230,6 @@ function VoiceMemberButton({ voiceUser, compact = false, onVolumeMenuOpen, onVol
                         />
                         {isStreaming && <span className={cl("live-badge")}>LIVE</span>}
                     </span>
-                    {!compact && (
-                        <span className={cl("member-info")}>
-                            <span className={cl("member-name")}>{name}</span>
-                            <span className={cl("member-username")}>{username}</span>
-                        </span>
-                    )}
                 </button>
             )}
         </Tooltip>
@@ -242,8 +291,9 @@ function VoiceMemberList({ voiceUsers, onVolumeMenuOpen, onVolumeMenuClose }: {
     );
 }
 
-function VoiceUsersPopout({ channelName, voiceUsers, count, onMouseEnter, onMouseLeave, onVolumeMenuOpen, onVolumeMenuClose }: {
+function VoiceUsersPopout({ channelName, voiceChannelId, voiceUsers, count, onMouseEnter, onMouseLeave, onVolumeMenuOpen, onVolumeMenuClose }: {
     channelName: string;
+    voiceChannelId: string;
     voiceUsers: VoiceUser[];
     count: number;
     onMouseEnter(): void;
@@ -257,8 +307,13 @@ function VoiceUsersPopout({ channelName, voiceUsers, count, onMouseEnter, onMous
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
         >
-            <Text variant="text-sm/bold" className={cl("popout-title")}>{channelName}</Text>
-            <Text variant="text-xs/normal" className={cl("popout-subtitle")}>{pluralise(count, "user")} connected</Text>
+            <div className={cl("popout-header")}>
+                <div className={cl("popout-copy")}>
+                    <Text variant="text-sm/bold" className={cl("popout-title")}>{channelName}</Text>
+                    <Text variant="text-xs/normal" className={cl("popout-subtitle")}>{pluralise(count, "user")} connected</Text>
+                </div>
+                <ScreenShareButton voiceChannelId={voiceChannelId} />
+            </div>
             <div className={cl("members")}>
                 <VoiceMemberList
                     voiceUsers={voiceUsers}
@@ -282,9 +337,21 @@ function CompactVoicePanel() {
         () => SelectedChannelStore.getVoiceChannelId()
     );
 
-    const voiceStates = useStateFromStores(
+    const voiceStateKey = useStateFromStores(
         [VoiceStateStore],
-        () => voiceChannelId ? VoiceStateStore.getVoiceStatesForChannel(voiceChannelId) : {}
+        () => {
+            if (!voiceChannelId) return "";
+
+            const states = VoiceStateStore.getVoiceStatesForChannel(voiceChannelId) ?? {};
+            return Object.values(states)
+                .map((voiceState: any) => [
+                    voiceState.userId,
+                    voiceState.selfStream ? "1" : "0",
+                    voiceState.stream ? "1" : "0"
+                ].join(":"))
+                .sort()
+                .join("|");
+        }
     );
 
     const activeStreamKey = useStateFromStores(
@@ -295,6 +362,7 @@ function CompactVoicePanel() {
     );
 
     const channel = voiceChannelId ? ChannelStore.getChannel(voiceChannelId) : undefined;
+    const voiceStates = voiceChannelId ? VoiceStateStore.getVoiceStatesForChannel(voiceChannelId) ?? {} : {};
     const voiceUsers = useMemo(
         () => {
             const userMap = new Map<string, VoiceUser>();
@@ -321,7 +389,7 @@ function CompactVoicePanel() {
 
             return [...userMap.values()];
         },
-        [activeStreamKey, channel, voiceStates]
+        [activeStreamKey, channel, voiceStateKey, voiceChannelId]
     );
 
     if (!voiceChannelId) return null;
@@ -379,6 +447,7 @@ function CompactVoicePanel() {
             renderPopout={() => (
                 <VoiceUsersPopout
                     channelName={channelName}
+                    voiceChannelId={voiceChannelId}
                     voiceUsers={voiceUsers}
                     count={userCount}
                     onMouseEnter={openPopout}
