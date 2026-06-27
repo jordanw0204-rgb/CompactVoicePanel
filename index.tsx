@@ -419,7 +419,7 @@ function VoiceAvatarStrip({ voiceUsers, expanded, onVolumeMenuOpen, onVolumeMenu
 }) {
     if (!voiceUsers.length) return null;
 
-    const visibleUsers = voiceUsers.slice(0, expanded ? 8 : 3);
+    const visibleUsers = voiceUsers.slice(0, expanded ? 8 : 6);
     const hiddenCount = voiceUsers.length - visibleUsers.length;
     const overflowUser = hiddenCount > 0 ? voiceUsers[visibleUsers.length] : undefined;
 
