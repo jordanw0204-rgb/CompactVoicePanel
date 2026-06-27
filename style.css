@@ -1,12 +1,14 @@
 .vc-compact-voice-panel-tile {
+    --vc-compact-voice-panel-base-width: 146px;
+    --vc-compact-voice-panel-expanded-extra: 0px;
     box-sizing: border-box;
     position: relative;
     display: flex;
     align-items: center;
-    gap: 5px;
-    width: 176px;
-    min-width: 176px;
-    max-width: 176px;
+    gap: 4px;
+    width: var(--vc-compact-voice-panel-base-width);
+    min-width: var(--vc-compact-voice-panel-base-width);
+    max-width: var(--vc-compact-voice-panel-base-width);
     height: 38px;
     padding: 4px 6px 4px 7px;
     border-radius: 8px;
@@ -27,10 +29,10 @@
 }
 
 .vc-compact-voice-panel-tile.vc-compact-voice-panel-expanded {
-    width: 316px;
-    min-width: 316px;
-    max-width: 316px;
-    margin-left: -140px;
+    width: calc(var(--vc-compact-voice-panel-base-width) + var(--vc-compact-voice-panel-expanded-extra));
+    min-width: calc(var(--vc-compact-voice-panel-base-width) + var(--vc-compact-voice-panel-expanded-extra));
+    max-width: calc(var(--vc-compact-voice-panel-base-width) + var(--vc-compact-voice-panel-expanded-extra));
+    margin-left: calc(var(--vc-compact-voice-panel-expanded-extra) * -1);
     z-index: 5;
     box-shadow: var(--elevation-low);
 }
@@ -86,15 +88,16 @@
 }
 
 .vc-compact-voice-panel-text {
-    display: flex;
-    flex: 1 1 58px;
+    display: none;
+    flex: 1 1 50px;
     min-width: 0;
     flex-direction: column;
     gap: 1px;
 }
 
 .vc-compact-voice-panel-tile.vc-compact-voice-panel-expanded .vc-compact-voice-panel-text {
-    flex: 0 1 82px;
+    display: flex;
+    flex: 0 1 76px;
 }
 
 .vc-compact-voice-panel-status {
@@ -187,9 +190,13 @@
 
 .vc-compact-voice-panel-avatars {
     display: flex;
+    flex: 0 1 auto;
     align-items: center;
     justify-content: center;
-    min-width: 48px;
+    overflow: hidden;
+    width: max-content;
+    min-width: 0;
+    max-width: 72px;
     min-height: 24px;
     padding: 2px 5px;
     border: 1px solid color-mix(in srgb, var(--background-modifier-accent) 70%, transparent);
@@ -200,7 +207,10 @@
 }
 
 .vc-compact-voice-panel-tile.vc-compact-voice-panel-expanded .vc-compact-voice-panel-avatars {
-    min-width: 132px;
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 72px;
+    max-width: none;
     justify-content: flex-start;
 }
 
@@ -212,6 +222,7 @@
 .vc-compact-voice-panel-avatar-strip {
     display: flex;
     align-items: center;
+    min-width: 0;
 }
 
 .vc-compact-voice-panel-avatar-strip .vc-compact-voice-panel-member {
@@ -524,7 +535,7 @@
 }
 
 [class*="panels"] [class*="avatarWrapper"] {
-    flex: 0 1 136px;
+    flex: 0 0 136px;
     min-width: 0;
     max-width: 136px;
 }

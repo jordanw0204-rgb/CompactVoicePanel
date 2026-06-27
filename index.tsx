@@ -5,7 +5,7 @@ import { openUserProfile } from "@utils/discord";
 import { pluralise } from "@utils/misc";
 import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { ApplicationStreamingStore, ChannelRouter, ChannelStore, ContextMenuApi, FluxDispatcher, MediaEngineStore, Menu, Popout, SoundboardStore, Text, Tooltip, UserStore, useEffect, useMemo, useRef, useState, useStateFromStores, VoiceStateStore, SelectedChannelStore } from "@webpack/common";
+import { ApplicationStreamingStore, ChannelRouter, ChannelStore, ContextMenuApi, FluxDispatcher, MediaEngineStore, Menu, Popout, SoundboardStore, Text, Tooltip, UserStore, useEffect, useLayoutEffect, useMemo, useRef, useState, useStateFromStores, VoiceStateStore, SelectedChannelStore } from "@webpack/common";
 
 import managedStyle from "./style.css?managed";
 
@@ -16,6 +16,9 @@ const MediaEngineActions = findByPropsLazy("setLocalVolume", "toggleLocalMute");
 const SpeakingStore = findByPropsLazy("isSpeaking");
 const pendingVolumes = new Map<string, number>();
 const volumeFrames = new Map<string, number>();
+const collapsedTileWidth = 146;
+const maxExpandedExtraWidth = 146;
+const panelEdgeGutter = 8;
 
 type VoiceUser = {
     user: any;
@@ -131,7 +134,7 @@ function WidthToggleButton({ expanded, onToggle }: { expanded: boolean; onToggle
                 >
                     <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
                         <path
-                            d={expanded ? "M9 6l6 6-6 6" : "M15 6l-6 6 6 6"}
+                            d={expanded ? "M15 6l-6 6 6 6" : "M9 6l6 6-6 6"}
                             fill="none"
                             stroke="currentColor"
                             strokeLinecap="round"
@@ -255,6 +258,23 @@ function clearPendingVolumeWrites() {
 
     volumeFrames.clear();
     pendingVolumes.clear();
+}
+
+function updatePanelExpansionBounds(tile: HTMLElement) {
+    const panels = tile.closest<HTMLElement>("[class*='panels']");
+    const panelRect = panels?.getBoundingClientRect();
+
+    if (!panelRect) {
+        tile.style.setProperty("--vc-compact-voice-panel-expanded-extra", "0px");
+        return;
+    }
+
+    const tileRect = tile.getBoundingClientRect();
+    const collapsedLeft = tileRect.right - collapsedTileWidth;
+    const safeLeftRoom = Math.max(0, collapsedLeft - panelRect.left - panelEdgeGutter);
+    const expandedExtra = Math.min(maxExpandedExtraWidth, safeLeftRoom);
+
+    tile.style.setProperty("--vc-compact-voice-panel-expanded-extra", `${Math.round(expandedExtra)}px`);
 }
 
 function VoiceUserContextMenu({ user, onClose }: { user: any; onClose(): void; }) {
@@ -549,6 +569,35 @@ function CompactVoicePanel() {
 
     const channel = voiceChannelId ? ChannelStore.getChannel(voiceChannelId) : undefined;
     const voiceStates = voiceChannelId ? VoiceStateStore.getVoiceStatesForChannel(voiceChannelId) ?? {} : {};
+
+    useLayoutEffect(() => {
+        const tile = targetRef.current;
+        if (!tile || !voiceChannelId) return;
+
+        const panels = tile.closest<HTMLElement>("[class*='panels']");
+        let frameId = 0;
+
+        function scheduleUpdate() {
+            window.cancelAnimationFrame(frameId);
+            frameId = window.requestAnimationFrame(() => {
+                if (targetRef.current) updatePanelExpansionBounds(targetRef.current);
+            });
+        }
+
+        scheduleUpdate();
+
+        const resizeObserver = new ResizeObserver(scheduleUpdate);
+        resizeObserver.observe(tile.parentElement ?? tile);
+        if (panels) resizeObserver.observe(panels);
+
+        window.addEventListener("resize", scheduleUpdate);
+
+        return () => {
+            window.cancelAnimationFrame(frameId);
+            resizeObserver.disconnect();
+            window.removeEventListener("resize", scheduleUpdate);
+        };
+    }, [voiceChannelId]);
 
     useEffect(() => {
         if (!voiceChannelId) return;
