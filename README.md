@@ -1,40 +1,48 @@
-# Vencord Compact Voice Panel
+# Compact Voice Panel
 
-Compact Voice Panel replaces Discord's bulky bottom-left voice connection block with a smaller tile next to your account controls.
+Compact Voice Panel cleans up Discord's bottom-left voice area by replacing the large voice connection block with a small tile beside your account controls.
 
-The goal is simple: keep the call controls usable without letting the voice panel eat the whole bottom bar.
+It keeps the useful parts close by: the current channel, connected user count, quick disconnect, avatar previews, and a hover popout for the people in voice. The rest of Discord's account row stays where you expect it: mute, deafen, settings, and your profile controls.
+
+## Preview
+
+![Compact voice tile beside the Discord account controls](assets/compact-panel.png)
+
+The collapsed tile sits in the account panel without taking over the whole bottom bar.
+
+![Compact voice panel hover popout showing the current channel and connected user](assets/voice-popout.png)
+
+Hovering the tile opens a small popout with the channel name, connected count, member avatars, and voice actions.
 
 ## Features
 
-- Replaces the large voice connection block with a compact tile.
+- Replaces Discord's large voice connection block with a compact account-panel tile.
 - Shows the current voice channel or call name.
-- Shows a small connected-user avatar strip.
-- Opens a member popout on hover with display names and usernames.
+- Shows connected users as a small avatar strip.
+- Opens a hover popout with display names, usernames, and voice-member controls.
 - Opens a user's Discord profile when you click their avatar.
-- Lets you right-click voice user avatars to adjust their local volume.
-- Marks users who are currently streaming with a small live badge.
-- Jumps back to the voice channel when clicked.
+- Lets you right-click voice user avatars to adjust local volume.
+- Marks users who are streaming with a small live badge.
+- Jumps back to the active voice channel when you click the tile.
 - Shows a disconnect button while hovering the tile.
 - Keeps Discord's normal mute, deafen, and settings buttons in the account-control row.
 
 ## Requirements
 
-- A source build of Vencord.
 - Discord desktop.
+- A source build of Vencord.
 
-This plugin is standalone. It does not require any private companion plugin.
+This is a standalone userplugin. You do not need a companion plugin or a separate service.
 
-## Install Vencord From Source
+## Install Vencord from source
 
-Custom Vencord plugins only work with a source build.
-
-Install:
+Custom Vencord plugins only work with a source build. Install these first:
 
 - [Git](https://git-scm.com/downloads)
 - [Node.js](https://nodejs.org/)
 - [pnpm](https://pnpm.io/installation)
 
-Then clone and install Vencord:
+Clone Vencord and install its dependencies:
 
 ```sh
 git clone https://github.com/Vendicated/Vencord
@@ -42,9 +50,9 @@ cd Vencord
 pnpm install --frozen-lockfile
 ```
 
-## Install This Plugin
+## Install the plugin
 
-From the Vencord folder:
+From your Vencord folder:
 
 ```sh
 mkdir -p src/userplugins
@@ -62,14 +70,18 @@ pnpm inject
 
 Restart Discord after injection.
 
-## Enable
+## Enable the plugin
 
 1. Open Discord settings.
 2. Go to `Vencord` -> `Plugins`.
 3. Enable `CompactVoicePanel`.
 4. Join a voice channel or call.
 
+The compact tile appears in the bottom-left account panel when you are connected to voice.
+
 ## Update
+
+From your Vencord folder:
 
 ```sh
 cd src/userplugins/CompactVoicePanel
@@ -83,10 +95,34 @@ Restart Discord after updating.
 
 ## Troubleshooting
 
-- Plugin missing: make sure the folder is `src/userplugins/CompactVoicePanel`.
-- Build failed: run `pnpm install --frozen-lockfile` in the Vencord folder.
-- Old voice panel still visible: rebuild, inject, and fully restart Discord.
-- Account controls look cramped: another account-panel plugin or theme may be taking extra space.
+### The plugin does not show up in Vencord
+
+Make sure the folder name is exactly:
+
+```text
+src/userplugins/CompactVoicePanel
+```
+
+Then rebuild Vencord and restart Discord.
+
+### The old voice panel is still visible
+
+Rebuild, inject, and fully restart Discord:
+
+```sh
+pnpm build
+pnpm inject
+```
+
+If Discord was already open, quit it completely before launching it again.
+
+### The compact tile is missing while you are in voice
+
+This usually means Discord changed the account-panel module that the plugin patches. Pull the latest version of the plugin, rebuild Vencord, inject again, and restart Discord.
+
+### The account row looks cramped
+
+Another account-panel plugin or a custom theme may be using the same space. Disable other account-panel tweaks temporarily to check for conflicts.
 
 ## Links
 
