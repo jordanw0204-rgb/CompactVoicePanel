@@ -1,3 +1,9 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2026 Vendicated and contributors
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 import ErrorBoundary from "@components/ErrorBoundary";
 import { ScreenshareIcon } from "@components/Icons";
 import { classNameFactory } from "@utils/css";
@@ -5,7 +11,7 @@ import { openUserProfile } from "@utils/discord";
 import { pluralise } from "@utils/misc";
 import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { ApplicationStreamingStore, ChannelRouter, ChannelStore, ContextMenuApi, FluxDispatcher, MediaEngineStore, Menu, Popout, SoundboardStore, Text, Tooltip, UserStore, useEffect, useLayoutEffect, useMemo, useRef, useState, useStateFromStores, VoiceStateStore, SelectedChannelStore } from "@webpack/common";
+import { ApplicationStreamingStore, ChannelRouter, ChannelStore, ContextMenuApi, FluxDispatcher, MediaEngineStore, Menu, Popout, SelectedChannelStore,SoundboardStore, Text, Tooltip, useEffect, useLayoutEffect, useMemo, useRef, UserStore, useState, useStateFromStores, VoiceStateStore } from "@webpack/common";
 
 import managedStyle from "./style.css?managed";
 
@@ -791,10 +797,10 @@ export default definePlugin({
     requiresRestart: false,
     patches: [
         {
-            find: ".DISPLAY_NAME_STYLES_COACHMARK)",
+            find: "accountContainerRef:this.containerRef",
             replacement: {
-                match: /children:\[(?=.{0,25}?accountContainerRef)/,
-                replace: "children:[$self.CompactVoicePanel(),"
+                match: /this\.renderNameZone\((\i)\),(\(0,\i\.jsx\)\(\i,{(?=.{0,500}?accountContainerRef:this\.containerRef))/,
+                replace: "this.renderNameZone($1),$self.CompactVoicePanel(),$2"
             }
         }
     ],
