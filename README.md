@@ -1,16 +1,16 @@
-# Compact Voice Panel
+# Vencord Better Voice Panel
 
-Compact Voice Panel cleans up Discord's bottom-left voice area by replacing the large voice connection block with a small tile beside your account controls.
+Better Voice Panel cleans up Discord's bottom-left voice area by replacing the large voice connection block with a small tile beside your account controls.
 
 It keeps the useful parts close by: the current channel, connected user count, quick disconnect, avatar previews, and a hover popout for the people in voice. The rest of Discord's account row stays where you expect it: mute, deafen, settings, and your profile controls.
 
 ## Preview
 
-![Compact voice tile beside the Discord account controls](assets/compact-panel.png)
+![Better Voice Panel tile beside the Discord account controls](assets/compact-panel.png)
 
 The collapsed tile sits in the account panel without taking over the whole bottom bar.
 
-![Compact voice panel hover popout showing the current channel and connected user](assets/voice-popout.png)
+![Better Voice Panel hover popout showing the current channel and connected user](assets/voice-popout.png)
 
 Hovering the tile opens a small popout with the channel name, connected count, member avatars, and voice actions.
 
@@ -57,7 +57,7 @@ From your Vencord folder:
 ```sh
 mkdir -p src/userplugins
 cd src/userplugins
-git clone https://github.com/jordanw0204-rgb/vencord-compact-voice-panel CompactVoicePanel
+git clone https://github.com/jordanw0204-rgb/vencord-better-voice-panel BetterVoicePanel
 ```
 
 Build and inject Vencord:
@@ -74,7 +74,7 @@ Restart Discord after injection.
 
 1. Open Discord settings.
 2. Go to `Vencord` -> `Plugins`.
-3. Enable `CompactVoicePanel`.
+3. Enable `BetterVoicePanel`.
 4. Join a voice channel or call.
 
 The compact tile appears in the bottom-left account panel when you are connected to voice.
@@ -84,7 +84,7 @@ The compact tile appears in the bottom-left account panel when you are connected
 From your Vencord folder:
 
 ```sh
-cd src/userplugins/CompactVoicePanel
+cd src/userplugins/BetterVoicePanel
 git pull
 cd ../../..
 pnpm build
@@ -100,7 +100,7 @@ Restart Discord after updating.
 Make sure the folder name is exactly:
 
 ```text
-src/userplugins/CompactVoicePanel
+src/userplugins/BetterVoicePanel
 ```
 
 Then rebuild Vencord and restart Discord.

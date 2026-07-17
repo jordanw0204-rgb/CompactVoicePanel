@@ -15,7 +15,7 @@ import { ApplicationStreamingStore, ChannelRouter, ChannelStore, ContextMenuApi,
 
 import managedStyle from "./style.css?managed";
 
-const cl = classNameFactory("vc-compact-voice-panel-");
+const cl = classNameFactory("vc-better-voice-panel-");
 const { selectVoiceChannel } = findByPropsLazy("selectVoiceChannel", "selectChannel");
 const ChannelActionCreators = findByPropsLazy("openPrivateChannel", "getDMChannel");
 const MediaEngineActions = findByPropsLazy("setLocalVolume", "toggleLocalMute");
@@ -271,7 +271,7 @@ function updatePanelExpansionBounds(tile: HTMLElement) {
     const panelRect = panels?.getBoundingClientRect();
 
     if (!panelRect) {
-        tile.style.setProperty("--vc-compact-voice-panel-expanded-extra", "0px");
+        tile.style.setProperty("--vc-better-voice-panel-expanded-extra", "0px");
         return;
     }
 
@@ -280,7 +280,7 @@ function updatePanelExpansionBounds(tile: HTMLElement) {
     const safeLeftRoom = Math.max(0, collapsedLeft - panelRect.left - panelEdgeGutter);
     const expandedExtra = Math.min(maxExpandedExtraWidth, safeLeftRoom);
 
-    tile.style.setProperty("--vc-compact-voice-panel-expanded-extra", `${Math.round(expandedExtra)}px`);
+    tile.style.setProperty("--vc-better-voice-panel-expanded-extra", `${Math.round(expandedExtra)}px`);
 }
 
 function VoiceUserContextMenu({ user, onClose }: { user: any; onClose(): void; }) {
@@ -305,7 +305,7 @@ function VoiceUserContextMenu({ user, onClose }: { user: any; onClose(): void; }
 
     return (
         <Menu.Menu
-            navId="vc-compact-voice-panel-user-context"
+            navId="vc-better-voice-panel-user-context"
             onClose={() => {
                 onClose();
             }}
@@ -313,19 +313,19 @@ function VoiceUserContextMenu({ user, onClose }: { user: any; onClose(): void; }
         >
             <Menu.MenuGroup>
                 <Menu.MenuCheckboxItem
-                    id="vc-compact-voice-panel-user-mute"
+                    id="vc-better-voice-panel-user-mute"
                     label="Mute"
                     checked={muted}
                     action={() => toggleLocalMute(user.id)}
                 />
                 <Menu.MenuCheckboxItem
-                    id="vc-compact-voice-panel-user-soundboard-mute"
+                    id="vc-better-voice-panel-user-soundboard-mute"
                     label="Mute Soundboard"
                     checked={soundboardMuted}
                     action={() => toggleSoundboardMute(user.id)}
                 />
                 <Menu.MenuItem
-                    id="vc-compact-voice-panel-user-message"
+                    id="vc-better-voice-panel-user-message"
                     label="Message"
                     action={() => openDirectMessage(user.id)}
                 />
@@ -333,7 +333,7 @@ function VoiceUserContextMenu({ user, onClose }: { user: any; onClose(): void; }
             <Menu.MenuSeparator />
             <Menu.MenuGroup>
                 <Menu.MenuControlItem
-                    id="vc-compact-voice-panel-user-volume"
+                    id="vc-better-voice-panel-user-volume"
                     label={`${displayName} Volume`}
                     control={(props, ref) => (
                         <Menu.MenuSliderControl
@@ -532,7 +532,7 @@ function VoiceUsersPopout({ channelName, voiceChannelId, voiceUsers, count, onMo
     );
 }
 
-function CompactVoicePanel() {
+function BetterVoicePanel() {
     const targetRef = useRef<HTMLDivElement>(null);
     const closeTimerRef = useRef<number | undefined>(undefined);
     const hoveringRef = useRef(false);
@@ -789,9 +789,9 @@ function CompactVoicePanel() {
 }
 
 export default definePlugin({
-    name: "CompactVoicePanel",
+    name: "BetterVoicePanel",
     description: "Replaces the large voice panel with a compact voice tile beside the account panel.",
-    authors: [{ name: "Local", id: 0n }],
+    authors: [{ name: "Jorda", id: 932850077888839690n }],
     enabledByDefault: true,
     managedStyle,
     requiresRestart: false,
@@ -800,10 +800,10 @@ export default definePlugin({
             find: "accountContainerRef:this.containerRef",
             replacement: {
                 match: /this\.renderNameZone\((\i)\),(\(0,\i\.jsx\)\(\i,{(?=.{0,500}?accountContainerRef:this\.containerRef))/,
-                replace: "this.renderNameZone($1),$self.CompactVoicePanel(),$2"
+                replace: "this.renderNameZone($1),$self.BetterVoicePanel(),$2"
             }
         }
     ],
-    CompactVoicePanel: ErrorBoundary.wrap(CompactVoicePanel, { noop: true }),
+    BetterVoicePanel: ErrorBoundary.wrap(BetterVoicePanel, { noop: true }),
     stop: clearPendingVolumeWrites,
 });
